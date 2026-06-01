@@ -7,13 +7,22 @@
     <style>
         body {
             margin: 0; padding: 0; background-color: #1a1a1a;
-            color: white; font-family: system-ui, sans-serif; text-align: center;
+            color: white; font-family: system-ui, -apple-system, sans-serif; text-align: center;
             overflow: hidden; touch-action: none; user-select: none;
         }
-        #game-container { position: relative; display: inline-block; margin-top: 5px; border: 4px solid #333; background-color: #2c3e50; }
+        
+        #game-container { 
+            position: relative; 
+            display: inline-block; 
+            margin-top: 10px; 
+            border: 4px solid #333; 
+            background-color: #2c3e50; 
+            box-shadow: 0 0 20px rgba(0,0,0,0.6);
+        }
+        
         canvas { display: block; }
 
-        /* 頂部 UI 血條 */
+        /* 👑 頂部 UI：血條 */
         #ui {
             position: absolute; top: 0; left: 0; width: 100%;
             display: flex; justify-content: space-between; padding: 10px 20px; box-sizing: border-box;
@@ -24,37 +33,43 @@
         .bar { width: 100%; height: 100%; transition: width 0.1s ease; }
         #p1-health { background: #2ecc71; }
         #p2-health { background: #3498db; float: right; }
-        .weapon-tag { font-size: 12px; color: #f1c40f; }
+        .weapon-tag { font-size: 13px; color: #f1c40f; font-weight: bold; }
 
-        /* 武器選擇畫面 (覆蓋在遊戲上) */
+        /* ⚔️ 武器選擇畫面 (覆蓋在遊戲畫布上方) */
         #weapon-select-screen {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.9); z-index: 20; display: flex; flex-direction: column; justify-content: center; align-items: center;
+            background: rgba(0,0,0,0.92); z-index: 20; 
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
         }
         .select-row { display: flex; gap: 40px; margin: 20px; }
-        .player-box { background: #333; padding: 15px; border-radius: 8px; border: 2px solid #555; }
-        .player-box h3 { margin-top: 0; }
-        .weapon-btn { padding: 10px 20px; font-size: 16px; margin: 5px; cursor: pointer; background: #555; color: white; border: 1px solid #fff; border-radius: 5px; }
-        .weapon-btn.selected { background: #e74c3c; font-weight: bold; }
-        #start-game-btn { padding: 12px 40px; font-size: 20px; background: #2ecc71; color: white; border: none; border-radius: 5px; cursor: pointer; margin-top: 20px; }
+        .player-box { background: #2c3e50; padding: 20px; border-radius: 10px; border: 2px solid #555; width: 180px; }
+        .player-box h3 { margin-top: 0; font-size: 20px; }
+        .weapon-btn { width: 100%; padding: 12px; font-size: 16px; margin: 6px 0; cursor: pointer; background: #444; color: white; border: 1px solid #fff; border-radius: 6px; transition: 0.2s; }
+        .weapon-btn.selected { background: #e74c3c; border-color: #ff7675; font-weight: bold; transform: scale(1.05); }
+        #start-game-btn { padding: 14px 50px; font-size: 22px; font-weight: bold; background: #2ecc71; color: white; border: none; border-radius: 6px; cursor: pointer; margin-top: 15px; box-shadow: 0 4px 10px rgba(46,204,113,0.4); }
 
-        /* 📱 iPad 操控區 (拉桿與按鈕) */
-        #touch-controls { position: absolute; bottom: 10px; left: 0; width: 100%; height: 130px; box-sizing: border-box; pointer-events: none; }
-        .joystick-zone { position: absolute; bottom: 10px; width: 120px; height: 120px; background: rgba(255,255,255,0.1); border-radius: 50%; border: 2px dashed rgba(255,255,255,0.3); pointer-events: auto; }
-        #p1-joystick-zone { left: 20px; }
-        #p2-joystick-zone { right: 160px; } /* P2 拉桿擺右邊偏內 */
+        /* 📱 iPad 專用物理操控區（拉桿與技能按鈕） */
+        #touch-controls { position: absolute; bottom: 10px; left: 0; width: 100%; height: 140px; box-sizing: border-box; pointer-events: none; }
         
-        .joystick-knob { position: absolute; width: 50px; height: 50px; background: rgba(255,255,255,0.5); border-radius: 50%; top: 35px; left: 35px; }
+        /* 虛擬搖桿底座 */
+        .joystick-zone { position: absolute; bottom: 10px; width: 120px; height: 120px; background: rgba(255,255,255,0.08); border-radius: 50%; border: 2px dashed rgba(255,255,255,0.25); pointer-events: auto; }
+        #p1-joystick-zone { left: 25px; }
+        #p2-joystick-zone { right: 175px; } /* P2 拉桿在右邊偏內側 */
         
-        .action-zone { position: absolute; bottom: 10px; display: flex; gap: 10px; pointer-events: auto; }
-        #p1-actions { left: 160px; }
-        #p2-actions { right: 20px; }
+        /* 搖桿中心點 */
+        .joystick-knob { position: absolute; width: 50px; height: 50px; background: rgba(255,255,255,0.45); border-radius: 50%; top: 35px; left: 35px; box-shadow: 0 2px 5px rgba(0,0,0,0.5); }
+        
+        /* 動作按鈕區 */
+        .action-zone { position: absolute; bottom: 15px; display: flex; gap: 12px; pointer-events: auto; }
+        #p1-actions { left: 175px; }
+        #p2-actions { right: 25px; }
 
-        .btn { width: 55px; height: 55px; border-radius: 50%; border: 2px solid #fff; font-size: 18px; font-weight: bold; color: white; }
+        .btn { width: 58px; height: 58px; border-radius: 50%; border: 2px solid #fff; font-size: 16px; font-weight: bold; color: white; box-shadow: 0 3px 5px rgba(0,0,0,0.3); }
+        .btn:active { transform: scale(0.9); opacity: 0.8; }
         .btn-red { background: #e74c3c; }
         .btn-yellow { background: #f1c40f; color: black; }
 
-        /* 遊戲結束 */
+        /* 🏁 遊戲結束彈窗 */
         #game-over-screen { position: absolute; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:10; display:flex; flex-direction:column; justify-content:center; align-items:center; }
         .hidden { display: none !important; }
     </style>
@@ -63,19 +78,20 @@
 
     <div id="game-container">
         <div id="weapon-select-screen">
-            <h2>⚔️ 自選武器與技能 ⚔️</h2>
+            <h2 style="font-size: 28px; color: #f1c40f; margin-bottom: 5px;">⚔️ Mini Brawl Ultra ⚔️</h2>
+            <p style="color: #aaa; margin: 0;">請選擇你的武器與技能，然後點擊開始！</p>
             <div class="select-row">
                 <div class="player-box" id="p1-select">
-                    <h3 style="color: #2ecc71;">Player 1</h3>
-                    <button class="weapon-btn selected" onclick="selectWeapon(1, 'sword')">大劍 (平衡)</button><br>
-                    <button class="weapon-btn" onclick="selectWeapon(1, 'spear')">長槍 (手長)</button><br>
-                    <button class="weapon-btn" onclick="selectWeapon(1, 'dagger')">匕首 (攻速快)</button>
+                    <h3 style="color: #2ecc71;">Player 1 (綠)</h3>
+                    <button class="weapon-btn selected" onclick="selectWeapon(1, 'sword')">大劍 (平衡)</button>
+                    <button class="weapon-btn" onclick="selectWeapon(1, 'spear')">長槍 (手長)</button>
+                    <button class="weapon-btn" onclick="selectWeapon(1, 'dagger')">匕首 (高速)</button>
                 </div>
                 <div class="player-box" id="p2-select">
-                    <h3 style="color: #3498db;">Player 2</h3>
-                    <button class="weapon-btn selected" onclick="selectWeapon(2, 'sword')">大劍 (平衡)</button><br>
-                    <button class="weapon-btn" onclick="selectWeapon(2, 'spear')">長槍 (手長)</button><br>
-                    <button class="weapon-btn" onclick="selectWeapon(2, 'dagger')">匕首 (攻速快)</button>
+                    <h3 style="color: #3498db;">Player 2 (藍)</h3>
+                    <button class="weapon-btn selected" onclick="selectWeapon(2, 'sword')">大劍 (平衡)</button>
+                    <button class="weapon-btn" onclick="selectWeapon(2, 'spear')">長槍 (手長)</button>
+                    <button class="weapon-btn" onclick="selectWeapon(2, 'dagger')">匕首 (高速)</button>
                 </div>
             </div>
             <button id="start-game-btn" onclick="startGame()">戰鬥開始 !!</button>
@@ -83,11 +99,11 @@
 
         <div id="ui">
             <div class="player-hud" style="text-align: left;">
-                <span style="color:#2ecc71; font-weight:bold;">P1</span> <span id="p1-w-tag" class="weapon-tag"></span>
+                <span style="color:#2ecc71; font-weight:bold; font-size:18px;">P1</span> <span id="p1-w-tag" class="weapon-tag"></span>
                 <div class="bar-container"><div id="p1-health" class="bar"></div></div>
             </div>
             <div class="player-hud" style="text-align: right;">
-                <span style="color:#3498db; font-weight:bold;">P2</span> <span id="p2-w-tag" class="weapon-tag"></span>
+                <span style="color:#3498db; font-weight:bold; font-size:18px;">P2</span> <span id="p2-w-tag" class="weapon-tag"></span>
                 <div class="bar-container"><div id="p2-health" class="bar"></div></div>
             </div>
         </div>
@@ -109,8 +125,8 @@
         </div>
 
         <div id="game-over-screen" class="hidden">
-            <h1 id="winner-text" style="font-size:36px; color:#f1c40f;"></h1>
-            <button id="start-game-btn" onclick="resetToSelect()">返去選角</button>
+            <h1 id="winner-text" style="font-size:36px; color:#f1c40f; text-shadow: 0 0 10px rgba(241,196,15,0.4);"></h1>
+            <button id="start-game-btn" onclick="resetToSelect()">返回武器選擇</button>
         </div>
     </div>
 
@@ -119,11 +135,11 @@
         const ctx = canvas.getContext('2d');
         const GRAVITY = 0.6;
 
-        // 武器數值設定表
+        // ⚔️ 三種武器嘅詳細數值設定
         const WEAPON_TYPES = {
-            sword:  { name: "大劍", range: 80,  height: 45, damage: 8,  cooldown: 200, color: '#f1c40f' },
-            spear:  { name: "長槍", range: 130, height: 25, damage: 6,  cooldown: 300, color: '#e67e22' },
-            dagger: { name: "匕首", range: 50,  height: 40, damage: 4,  cooldown: 100, color: '#e74c3c' }
+            sword:  { name: "大劍", range: 80,  height: 45, damage: 8,  cooldown: 200 },
+            spear:  { name: "長槍", range: 135, height: 25, damage: 6,  cooldown: 320 },
+            dagger: { name: "匕首", range: 50,  height: 40, damage: 4,  cooldown: 110 }
         };
 
         let p1SelectedWeapon = 'sword';
@@ -135,15 +151,14 @@
                 this.id = id;
                 this.x = x; this.y = 100;
                 this.vx = 0; this.vy = 0;
-                this.width = 40; this.height = 85;
+                this.width = 42; this.height = 85;
                 this.color = color;
                 this.health = 100;
                 this.facing = id === 1 ? 'right' : 'left';
                 this.isAttacking = false;
-                this.attackType = 'normal'; // 'normal' 或 'skill'
-                this.flash = 0;
+                this.attackType = 'normal'; // 'normal' 普攻, 'skill' 大招
+                this.flash = 0; // 受傷閃爍計時
 
-                // 根據選定武器初始化數值
                 this.setWeapon(weaponType);
             }
 
@@ -153,17 +168,21 @@
             }
 
             draw() {
-                ctx.fillStyle = this.flash > 0 && Math.floor(this.flash/3)%2===0 ? '#fff' : this.color;
+                // 受傷時紅白交替閃爍
+                ctx.fillStyle = this.flash > 0 && Math.floor(this.flash/3)%2===0 ? '#ffffff' : this.color;
                 if(this.flash > 0) this.flash--;
+                
+                // 畫身體
                 ctx.fillRect(this.x, this.y, this.width, this.height);
 
                 // 畫眼睛
                 ctx.fillStyle = '#000';
-                ctx.fillRect(this.facing === 'right' ? this.x + 28 : this.x + 6, this.y + 15, 7, 7);
+                ctx.fillRect(this.facing === 'right' ? this.x + 30 : this.x + 6, this.y + 16, 7, 7);
 
-                // 畫攻擊特效
+                // 畫攻擊特效範圍
                 if (this.isAttacking) {
-                    ctx.fillStyle = this.attackType === 'skill' ? 'rgba(155, 89, 182, 0.7)' : 'rgba(255,255,255,0.5)';
+                    // 普攻用白色透明，大招用紫色透明
+                    ctx.fillStyle = this.attackType === 'skill' ? 'rgba(155, 89, 182, 0.65)' : 'rgba(255, 255, 255, 0.45)';
                     let ax = this.facing === 'right' ? this.x + this.width : this.x - this.attackBox.width;
                     let ay = this.y + 20;
                     ctx.fillRect(ax, ay, this.attackBox.width, this.attackBox.height);
@@ -174,11 +193,14 @@
                 this.draw();
                 this.x += this.vx; this.y += this.vy;
 
-                // 重力與地面限制
-                if (this.y + this.height + this.vy >= canvas.height - 30) {
-                    this.vy = 0; this.y = canvas.height - 30 - this.height;
-                } else { this.vy += GRAVITY; }
+                // 地面碰撞偵測 (底部留 35px 畫草地)
+                if (this.y + this.height + this.vy >= canvas.height - 35) {
+                    this.vy = 0; this.y = canvas.height - 35 - this.height;
+                } else { 
+                    this.vy += GRAVITY; 
+                }
 
+                // 左右屏幕邊界鎖定
                 if (this.x < 0) this.x = 0;
                 if (this.x + this.width > canvas.width) this.x = canvas.width - this.width;
             }
@@ -188,10 +210,14 @@
                     this.isAttacking = true;
                     this.attackType = type;
                     
-                    // 如果是大招 (SKL)，攻擊盒範圍暫時變大 1.5 倍
-                    if(type === 'skill') { this.attackBox.width = this.weapon.range * 1.5; }
-                    else { this.attackBox.width = this.weapon.range; }
+                    // 大招 (SKL) 會令武器範圍暴增 1.5 倍
+                    if(type === 'skill') { 
+                        this.attackBox.width = this.weapon.range * 1.5; 
+                    } else { 
+                        this.attackBox.width = this.weapon.range; 
+                    }
 
+                    // 根據武器冷卻時間決定收招速度
                     setTimeout(() => { this.isAttacking = false; }, this.weapon.cooldown);
                 }
             }
@@ -199,7 +225,7 @@
 
         let player1, player2;
 
-        // 選擇武器 UI 切換
+        // 選擇武器按鈕點擊處理
         function selectWeapon(pId, type) {
             if(pId === 1) {
                 p1SelectedWeapon = type;
@@ -211,10 +237,11 @@
             event.target.classList.add('selected');
         }
 
+        // 初始化遊戲並隱藏選單
         function startGame() {
             document.getElementById('weapon-select-screen').classList.add('hidden');
-            document.getElementById('p1-w-tag').innerText = `(${WEAPON_TYPES[p1SelectedWeapon].name})`;
-            document.getElementById('p2-w-tag').innerText = `(${WEAPON_TYPES[p2SelectedWeapon].name})`;
+            document.getElementById('p1-w-tag').innerText = `[${WEAPON_TYPES[p1SelectedWeapon].name}]`;
+            document.getElementById('p2-w-tag').innerText = `[${WEAPON_TYPES[p2SelectedWeapon].name}]`;
             
             player1 = new Fighter({ x: 150, color: '#2ecc71', id: 1, weaponType: p1SelectedWeapon });
             player2 = new Fighter({ x: 600, color: '#3498db', id: 2, weaponType: p2SelectedWeapon });
@@ -227,6 +254,7 @@
             animate();
         }
 
+        // 矩形碰撞判定公用函式
         function checkHit(att, def) {
             let ax = att.facing === 'right' ? att.x + att.width : att.x - att.attackBox.width;
             let ay = att.y + 20;
@@ -236,44 +264,49 @@
             );
         }
 
+        // 遊戲主循環
         function animate() {
             if (gameOver) return;
             window.requestAnimationFrame(animate);
 
+            // 擦掉舊畫面，畫背景及地面
             ctx.fillStyle = '#34495e'; ctx.fillRect(0, 0, canvas.width, canvas.height);
-            ctx.fillStyle = '#2c3e50'; ctx.fillRect(0, canvas.height - 30, canvas.width, 30); // 地面
+            ctx.fillStyle = '#27ae60'; ctx.fillRect(0, canvas.height - 35, canvas.width, 35); 
 
-            // 讀取拉桿物理移動數值
-            player1.vx = p1Joystick.dx * 5;
+            // 【P1 操控讀取】
+            player1.vx = p1Joystick.dx * 5.5; // 速度微調順暢
             if(p1Joystick.dx > 0.1) player1.facing = 'right';
             if(p1Joystick.dx < -0.1) player1.facing = 'left';
-            if(p1Joystick.dy < -0.6 && player1.vy === 0) player1.vy = -13; // 拉桿向上跳
+            if(p1Joystick.dy < -0.65 && player1.vy === 0) player1.vy = -13.5; // 向上推拉桿跳躍
 
-            player2.vx = p2Joystick.dx * 5;
+            // 【P2 操控讀取】
+            player2.vx = p2Joystick.dx * 5.5;
             if(p2Joystick.dx > 0.1) player2.facing = 'right';
             if(p2Joystick.dx < -0.1) player2.facing = 'left';
-            if(p2Joystick.dy < -0.6 && player2.vy === 0) player2.vy = -13;
+            if(p2Joystick.dy < -0.65 && player2.vy === 0) player2.vy = -13.5;
 
             player1.update();
             player2.update();
 
-            // 命中傷害計算
+            // 【碰撞判定：P1 揮刀】
             if (player1.isAttacking) {
                 if (checkHit(player1, player2)) {
-                    let dmg = player1.attackType === 'skill' ? player1.weapon.damage * 2 : player1.weapon.damage;
-                    player2.health -= dmg; player2.flash = 10;
+                    let dmg = player1.attackType === 'skill' ? player1.weapon.damage * 2.2 : player1.weapon.damage;
+                    player2.health -= dmg; player2.flash = 12;
                     document.getElementById('p2-health').style.width = Math.max(0, player2.health) + '%';
-                    player1.isAttacking = false;
-                    if(player2.health <= 0) endGame("Player 1 (綠色) 獲勝！");
+                    player1.isAttacking = false; // 擊中後立刻收起攻擊盒防重複判定
+                    if(player2.health <= 0) endGame("Player 1 (綠色) 贏了！");
                 }
             }
+            
+            // 【碰撞判定：P2 揮刀】
             if (player2.isAttacking) {
                 if (checkHit(player2, player1)) {
-                    let dmg = player2.attackType === 'skill' ? player2.weapon.damage * 2 : player2.weapon.damage;
-                    player1.health -= dmg; player1.flash = 10;
+                    let dmg = player2.attackType === 'skill' ? player2.weapon.damage * 2.2 : player2.weapon.damage;
+                    player1.health -= dmg; player1.flash = 12;
                     document.getElementById('p1-health').style.width = Math.max(0, player1.health) + '%';
                     player2.isAttacking = false;
-                    if(player1.health <= 0) endGame("Player 2 (藍色) 獲勝！");
+                    if(player1.health <= 0) endGame("Player 2 (藍色) 贏了！");
                 }
             }
         }
@@ -281,12 +314,12 @@
         function endGame(txt) { gameOver = true; document.getElementById('game-over-screen').classList.remove('hidden'); document.getElementById('winner-text').innerText = txt; }
         function resetToSelect() { document.getElementById('game-over-screen').classList.add('hidden'); document.getElementById('weapon-select-screen').classList.remove('hidden'); }
 
-        // 🕹️ 核心技術：iPad 虛擬拉桿（Joystick）演算法
+        // 🕹️ 核心技術：iPad 專用多點觸控虛擬拉桿演算法 (Joystick Class)
         class TouchJoystick {
             constructor(zoneId, knobId) {
                 this.zone = document.getElementById(zoneId);
                 this.knob = document.getElementById(knobId);
-                this.dx = 0; this.dy = 0; // 傳給遊戲外面的移動比例 (-1 至 1)
+                this.dx = 0; this.dy = 0; 
                 this.activeTouchId = null;
                 this.init();
             }
@@ -317,27 +350,27 @@
                 let centerX = rect.left + rect.width / 2; let centerY = rect.top + rect.height / 2;
                 let deltaX = touch.clientX - centerX; let deltaY = touch.clientY - centerY;
                 let distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
-                let maxRadius = rect.width / 2 - 10; // 限制拉桿移動邊界
+                let maxRadius = rect.width / 2 - 8; 
 
                 if (distance > maxRadius) { deltaX = (deltaX / distance) * maxRadius; deltaY = (deltaY / distance) * maxRadius; distance = maxRadius; }
                 this.knob.style.transform = `translate(${deltaX}px, ${deltaY}px)`;
-                this.dx = deltaX / maxRadius; this.dy = deltaY / maxRadius; // 正規化為 -1 到 1 數值
+                this.dx = deltaX / maxRadius; this.dy = deltaY / maxRadius; 
             }
         }
 
-        // 初始化 P1 & P2 虛擬拉桿
+        // 啟動 P1 與 P2 虛擬拉桿物件
         const p1Joystick = new TouchJoystick('p1-joystick-zone', 'p1-knob');
         const p2Joystick = new TouchJoystick('p2-joystick-zone', 'p2-knob');
 
-        // 綁定右邊動作按鈕
-        const setupBtn = (id, cb) => {
+        // 高敏捷觸控按鈕綁定
+        function bindActionButton(id, callback) {
             let el = document.getElementById(id);
-            el.addEventListener('touchstart', (e) => { e.preventDefault(); cb(); });
-        };
-        setupBtn('p1-btn-atk', () => player1.attack('normal'));
-        setupBtn('p1-btn-skr', () => player1.attack('skill'));
-        setupBtn('p2-btn-atk', () => player2.attack('normal'));
-        setupBtn('p2-btn-skr', () => player2.attack('skill'));
+            el.addEventListener('touchstart', (e) => { e.preventDefault(); callback(); });
+        }
+        bindActionButton('p1-btn-atk', () => player1.attack('normal'));
+        bindActionButton('p1-btn-skr', () => player1.attack('skill'));
+        bindActionButton('p2-btn-atk', () => player2.attack('normal'));
+        bindActionButton('p2-btn-skr', () => player2.attack('skill'));
     </script>
 </body>
 </html>
