@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Mini Brawl Ultra - Stable Edition</title>
+    <title>Mini Brawl Ultra - Ultimate Edition</title>
     <style>
         body {
             margin: 0; padding: 0; background-color: #0b0c10;
@@ -116,28 +116,28 @@
     <div id="game-wrapper">
         <div id="game-container">
             <div id="weapon-select-screen">
-                <h2 style="font-size: 18px; color: #fbc531; margin: 0 0 6px 0; font-weight:900; text-align:center; width:100%;">⚔️ MINI BRAWL ULTRA v5.2 ⚔️</h2>
+                <h2 style="font-size: 18px; color: #fbc531; margin: 0 0 6px 0; font-weight:900; text-align:center; width:100%;">⚔️ MINI BRAWL ULTRA v5.3 ⚔️</h2>
                 
                 <div class="select-main-area">
                     <div class="player-box" id="p1-select">
                         <h3 style="color: #4cd137;">PLAYER 1</h3>
-                        <button class="weapon-btn selected" onclick="selectWeapon(1, 'sword')">
+                        <button class="weapon-btn selected" onclick="selectWeapon(1, 'sword', event)">
                             <span class="w-name">🗡️ 巨刃大劍</span>
                             <span class="w-desc">傷 12 | 範 85 | 大招：強力擊退</span>
                         </button>
-                        <button class="weapon-btn" onclick="selectWeapon(1, 'spear')">
+                        <button class="weapon-btn" onclick="selectWeapon(1, 'spear', event)">
                             <span class="w-name">🔱 風暴長槍</span>
                             <span class="w-desc">傷 8 | 範 145 | 大招：穿透突刺</span>
                         </button>
-                        <button class="weapon-btn" onclick="selectWeapon(1, 'dagger')">
+                        <button class="weapon-btn" onclick="selectWeapon(1, 'dagger', event)">
                             <span class="w-name">🩸 劇毒匕首</span>
                             <span class="w-desc">傷 5 | 範 55 | 大招：劇毒扣血</span>
                         </button>
-                        <button class="weapon-btn" onclick="selectWeapon(1, 'staff')">
+                        <button class="weapon-btn" onclick="selectWeapon(1, 'staff', event)">
                             <span class="w-name">🔮 奧術法杖</span>
                             <span class="w-desc">傷 6 | 射法術彈 | 大招：全屏落雷</span>
                         </button>
-                        <button class="weapon-btn" onclick="selectWeapon(1, 'shield')">
+                        <button class="weapon-btn" onclick="selectWeapon(1, 'shield', event)">
                             <span class="w-name">🛡️ 荊棘神盾</span>
                             <span class="w-desc">傷 7 | 被動反傷 | 大招：3秒無敵</span>
                         </button>
@@ -149,23 +149,23 @@
 
                     <div class="player-box" id="p2-select">
                         <h3 style="color: #00a8ff;">PLAYER 2</h3>
-                        <button class="weapon-btn selected" onclick="selectWeapon(2, 'sword')">
+                        <button class="weapon-btn selected" onclick="selectWeapon(2, 'sword', event)">
                             <span class="w-name">🗡️ 巨刃大劍</span>
                             <span class="w-desc">傷 12 | 範 85 | 大招：強力擊退</span>
                         </button>
-                        <button class="weapon-btn" onclick="selectWeapon(2, 'spear')">
+                        <button class="weapon-btn" onclick="selectWeapon(2, 'spear', event)">
                             <span class="w-name">🔱 風暴長槍</span>
                             <span class="w-desc">傷 8 | 範 145 | 大招：穿透突刺</span>
                         </button>
-                        <button class="weapon-btn" onclick="selectWeapon(2, 'dagger')">
+                        <button class="weapon-btn" onclick="selectWeapon(2, 'dagger', event)">
                             <span class="w-name">🩸 劇毒匕首</span>
                             <span class="w-desc">傷 5 | 範 55 | 大招：劇毒扣血</span>
                         </button>
-                        <button class="weapon-btn" onclick="selectWeapon(2, 'staff')">
+                        <button class="weapon-btn" onclick="selectWeapon(2, 'staff', event)">
                             <span class="w-name">🔮 奧術法杖</span>
                             <span class="w-desc">傷 6 | 射法術彈 | 大招：全屏落雷</span>
                         </button>
-                        <button class="weapon-btn" onclick="selectWeapon(2, 'shield')">
+                        <button class="weapon-btn" onclick="selectWeapon(2, 'shield', event)">
                             <span class="w-name">🛡️ 荊棘神盾</span>
                             <span class="w-desc">傷 7 | 被動反傷 | 大招：3秒無敵</span>
                         </button>
@@ -311,6 +311,7 @@
                 this.health -= amount; this.flash = 10; if (this.health <= 0) this.health = 0;
             }
             attack(type) {
+                if (gameOver || !player1 || !player2) return;
                 const now = Date.now();
                 if (type === 'skill') {
                     if (now < this.nextSkillTime) return;
@@ -340,7 +341,7 @@
         let player1, player2;
         let p1SelectedWeapon = 'sword', p2SelectedWeapon = 'sword';
 
-        function selectWeapon(pId, type) {
+        function selectWeapon(pId, type, event) {
             if(pId === 1) p1SelectedWeapon = type; else p2SelectedWeapon = type;
             event.currentTarget.parentNode.querySelectorAll('.weapon-btn').forEach(b => b.classList.remove('selected'));
             event.currentTarget.classList.add('selected');
@@ -370,6 +371,7 @@
         setInterval(() => { if (!gameOver && !activeRune && player1) activeRune = new Rune(); }, 10000);
 
         function updateHealthUI() {
+            if (!player1 || !player2) return;
             let hp1 = Math.ceil(player1.health); let hp2 = Math.ceil(player2.health);
             document.getElementById('p1-hp-text').innerText = `${hp1} / 100`; document.getElementById('p2-hp-text').innerText = `${hp2} / 100`;
             document.getElementById('p1-health').style.width = hp1 + '%'; document.getElementById('p2-health').style.width = hp2 + '%';
@@ -435,6 +437,7 @@
         function endGame(txt) { gameOver = true; document.getElementById('game-over-screen').classList.remove('hidden'); document.getElementById('winner-text').innerText = txt; }
         function resetToSelect() { document.getElementById('game-over-screen').classList.add('hidden'); document.getElementById('weapon-select-screen').classList.remove('hidden'); document.getElementById('touch-controls').classList.add('menu-active'); }
 
+        /* 📱 補齊核心：觸控搖桿類別與邏輯定義 */
         class TouchJoystick {
             constructor(zoneId, knobId) {
                 this.zone = document.getElementById(zoneId); this.knob = document.getElementById(knobId);
@@ -454,12 +457,20 @@
             }
         }
 
+        // 綁定搖桿與戰鬥攻擊按鈕觸控事件
         const p1Joystick = new TouchJoystick('p1-joystick-zone', 'p1-knob');
         const p2Joystick = new TouchJoystick('p2-joystick-zone', 'p2-knob');
 
-        function bindActionButton(id, callback) { document.getElementById(id).addEventListener('touchstart', (e) => { e.preventDefault(); callback(); }, { passive: false }); }
-        bindActionButton('p1-btn-atk', () => player1.attack('normal')); bindActionButton('p1-btn-skr', () => player1.attack('skill'));
-        bindActionButton('p2-btn-atk', () => player2.attack('normal')); bindActionButton('p2-btn-skr', () => player2.attack('skill'));
+        function bindActionButton(id, callback) { 
+            document.getElementById(id).addEventListener('touchstart', (e) => { 
+                e.preventDefault(); 
+                callback(); 
+            }, { passive: false }); 
+        }
+        bindActionButton('p1-btn-atk', () => { if(player1) player1.attack('normal'); }); 
+        bindActionButton('p1-btn-skr', () => { if(player1) player1.attack('skill'); });
+        bindActionButton('p2-btn-atk', () => { if(player2) player2.attack('normal'); }); 
+        bindActionButton('p2-btn-skr', () => { if(player2) player2.attack('skill'); });
     </script>
 </body>
 </html>
