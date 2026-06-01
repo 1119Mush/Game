@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Mini Brawl Ultra - Ultimate Edition</title>
+    <title>Mini Brawl Ultra - Name Tag Edition</title>
     <style>
         body {
             margin: 0; padding: 0; background-color: #0b0c10;
@@ -43,7 +43,7 @@
         #p2-health { background: linear-gradient(90deg, #00a8ff, #0097e6); float: right; }
         .state-tag { color: #fbc531; font-size: 11px; margin-left: 5px; font-weight: normal; }
 
-        /* ⚔️ 武器選單佈局 */
+        /* ⚔️ 武器選單與命名佈局 */
         #weapon-select-screen {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(11, 12, 16, 0.98); z-index: 30;
@@ -57,12 +57,20 @@
 
         .player-box { 
             background: #15181f; padding: 8px 12px; border-radius: 10px; border: 2px solid #2f3640; 
-            width: 42%; display: flex; flex-direction: column; justify-content: center; box-sizing: border-box; 
+            width: 42%; display: flex; flex-direction: column; justify-content: flex-start; box-sizing: border-box; 
         }
         .player-box h3 { margin: 0 0 6px 0; font-size: 16px; text-align: center; font-weight: 900; }
         
+        /* 🏷️ 名字輸入框樣式 */
+        .name-input {
+            width: 100%; padding: 6px; margin-bottom: 8px; border-radius: 6px;
+            border: 2px solid #4f5b66; background: #21252f; color: white;
+            font-size: 13px; text-align: center; box-sizing: border-box;
+        }
+        .name-input:focus { border-color: #fbc531; outline: none; }
+
         .weapon-btn { 
-            width: 100%; padding: 5px 8px; margin: 3px 0; cursor: pointer; 
+            width: 100%; padding: 5px 8px; margin: 2px 0; cursor: pointer; 
             background: #21252f; color: white; border: 2px solid transparent; border-radius: 6px; 
             text-align: left; display: flex; flex-direction: column; box-sizing: border-box;
         }
@@ -116,11 +124,13 @@
     <div id="game-wrapper">
         <div id="game-container">
             <div id="weapon-select-screen">
-                <h2 style="font-size: 18px; color: #fbc531; margin: 0 0 6px 0; font-weight:900; text-align:center; width:100%;">⚔️ MINI BRAWL ULTRA v5.3 ⚔️</h2>
+                <h2 style="font-size: 18px; color: #fbc531; margin: 0 0 6px 0; font-weight:900; text-align:center; width:100%;">⚔️ MINI BRAWL ULTRA v5.4 ⚔️</h2>
                 
                 <div class="select-main-area">
                     <div class="player-box" id="p1-select">
                         <h3 style="color: #4cd137;">PLAYER 1</h3>
+                        <input type="text" id="p1-name-input" class="name-input" placeholder="輸入 P1 名字..." value="玩家1">
+                        
                         <button class="weapon-btn selected" onclick="selectWeapon(1, 'sword', event)">
                             <span class="w-name">🗡️ 巨刃大劍</span>
                             <span class="w-desc">傷 12 | 範 85 | 大招：強力擊退</span>
@@ -149,6 +159,8 @@
 
                     <div class="player-box" id="p2-select">
                         <h3 style="color: #00a8ff;">PLAYER 2</h3>
+                        <input type="text" id="p2-name-input" class="name-input" placeholder="輸入 P2 名字..." value="玩家2">
+                        
                         <button class="weapon-btn selected" onclick="selectWeapon(2, 'sword', event)">
                             <span class="w-name">🗡️ 巨刃大劍</span>
                             <span class="w-desc">傷 12 | 範 85 | 大招：強力擊退</span>
@@ -175,14 +187,14 @@
 
             <div id="ui">
                 <div class="player-hud">
-                    <div class="hud-meta"><span style="color:#4cd137;">P1 <span id="p1-status" class="state-tag"></span></span><span id="p1-hp-text">100 / 100</span></div>
+                    <div class="hud-meta"><span style="color:#4cd137;" id="p1-hud-name">P1</span><span id="p1-hp-text">100 / 100</span></div>
                     <div class="bar-container">
                         <div id="p1-health-back" class="bar-back"></div>
                         <div id="p1-health" class="bar-front"></div>
                     </div>
                 </div>
                 <div class="player-hud" style="text-align: right;">
-                    <div class="hud-meta"><span id="p2-hp-text">100 / 100</span><span style="color:#00a8ff;"><span id="p2-status" class="state-tag"></span> P2</span></div>
+                    <div class="hud-meta"><span id="p2-hp-text">100 / 100</span><span style="color:#00a8ff;" id="p2-hud-name">P2</span></div>
                     <div class="bar-container">
                         <div id="p2-health-back" class="bar-back"></div>
                         <div id="p2-health" class="bar-front"></div>
@@ -265,12 +277,13 @@
         }
 
         class Fighter {
-            constructor({ x, color, id, weaponType }) {
+            constructor({ x, color, id, weaponType, name }) {
                 this.id = id; this.x = x; this.y = 100; this.vx = 0; this.vy = 0;
                 this.baseWidth = 42; this.baseHeight = 85; this.color = color; this.health = 100;
                 this.facing = id === 1 ? 'right' : 'left'; this.isAttacking = false; this.attackType = 'normal';
                 this.flash = 0; this.scaleX = 1; this.scaleY = 1; this.nextSkillTime = 0;
                 this.poisonTicks = 0; this.invincibleUntil = 0; this.dmgBuffUntil = 0;
+                this.name = name || `P${id}`; // 儲存角色名字
                 this.setWeapon(weaponType);
             }
             setWeapon(type) {
@@ -280,13 +293,31 @@
             draw() {
                 ctx.save(); let centerX = this.x + this.baseWidth / 2; let centerY = this.y + this.baseHeight;
                 ctx.translate(centerX, centerY); ctx.scale(this.scaleX, this.scaleY);
+                
+                // 判斷是否處於受傷閃爍狀態
+                let isFlashing = this.flash > 0 && Math.floor(this.flash / 2) % 2 === 0;
+                
                 if (Date.now() < this.invincibleUntil) ctx.fillStyle = '#fbc531';
                 else if (this.poisonTicks > 0 && Math.floor(Date.now()/100)%2===0) ctx.fillStyle = '#2cd14d';
-                else ctx.fillStyle = this.flash > 0 && Math.floor(this.flash/2)%2===0 ? '#ffffff' : this.color;
+                else ctx.fillStyle = isFlashing ? '#ffffff' : this.color;
+                
                 if(this.flash > 0) this.flash--;
                 ctx.fillRect(-this.baseWidth/2, -this.baseHeight, this.baseWidth, this.baseHeight);
                 ctx.fillStyle = '#0f1115'; ctx.fillRect(this.facing === 'right' ? 10 : -17, -this.baseHeight + 16, 7, 7);
                 ctx.restore();
+
+                // 🏷️ 繪製動態懸浮名字 (隨角色移動，且受傷時同步變紅/閃爍)
+                ctx.save();
+                ctx.font = 'bold 14px system-ui, sans-serif';
+                ctx.textAlign = 'center';
+                // 受傷閃爍時名字變成亮紅色，其餘時間與血條顏色一致
+                ctx.fillStyle = isFlashing ? '#ff4757' : this.color;
+                // 加點黑色陰影讓名字在戰鬥中更清晰
+                ctx.shadowColor = 'black';
+                ctx.shadowBlur = 4;
+                ctx.fillText(this.name, this.x + this.baseWidth / 2, this.y - 12);
+                ctx.restore();
+
                 if (Date.now() < this.dmgBuffUntil) { ctx.strokeStyle = '#fbc531'; ctx.lineWidth = 2; ctx.strokeRect(this.x - 4, this.y - 4, this.baseWidth + 8, this.baseHeight + 8); }
                 if (this.isAttacking && this.weaponType !== 'staff') {
                     ctx.save(); let ax = this.facing === 'right' ? this.x + this.baseWidth : this.x - this.attackBox.width; let ay = this.y + 15;
@@ -308,7 +339,7 @@
             takeDamage(amount, attacker, canReflect = true) {
                 if (Date.now() < this.invincibleUntil) return;
                 if (canReflect && this.weaponType === 'shield' && attacker) { attacker.takeDamage(amount * 0.2, null, false); }
-                this.health -= amount; this.flash = 10; if (this.health <= 0) this.health = 0;
+                this.health -= amount; this.flash = 12; if (this.health <= 0) this.health = 0; // 稍微拉長閃爍幀數增加視覺反饋
             }
             attack(type) {
                 if (gameOver || !player1 || !player2) return;
@@ -322,7 +353,7 @@
                         triggerScreenShake(15, 8); let enemy = this.id === 1 ? player2 : player1;
                         let finalDmg = (now < this.dmgBuffUntil ? 22 : 11); enemy.takeDamage(finalDmg, this);
                         createHitExplosion(enemy.x + 20, enemy.y + 40, '#9c88ff'); updateHealthUI(); 
-                        if(enemy.health <= 0) endGame(`PLAYER ${this.id} 贏了！`);
+                        if(enemy.health <= 0) endGame(`${this.name} 贏了！`);
                         return;
                     }
                 }
@@ -348,11 +379,21 @@
         }
 
         function startGame() {
+            // 獲取輸入的名字，若空白則給預設值
+            let p1Name = document.getElementById('p1-name-input').value.trim() || '玩家1';
+            let p2Name = document.getElementById('p2-name-input').value.trim() || '玩家2';
+
+            // 同步更新頂部血條的名稱顯示
+            document.getElementById('p1-hud-name').innerText = p1Name;
+            document.getElementById('p2-hud-name').innerText = p2Name;
+
             document.getElementById('weapon-select-screen').classList.add('hidden');
             document.getElementById('touch-controls').classList.remove('menu-active');
             
-            player1 = new Fighter({ x: 120, color: '#4cd137', id: 1, weaponType: p1SelectedWeapon });
-            player2 = new Fighter({ x: 640, color: '#00a8ff', id: 2, weaponType: p2SelectedWeapon });
+            // 實例化角色時帶入名字
+            player1 = new Fighter({ x: 120, color: '#4cd137', id: 1, weaponType: p1SelectedWeapon, name: p1Name });
+            player2 = new Fighter({ x: 640, color: '#00a8ff', id: 2, weaponType: p2SelectedWeapon, name: p2Name });
+            
             gameOver = false; particles = []; projectiles = []; activeRune = null;
             document.getElementById('game-over-screen').classList.add('hidden');
             updateHealthUI();
@@ -376,8 +417,6 @@
             document.getElementById('p1-hp-text').innerText = `${hp1} / 100`; document.getElementById('p2-hp-text').innerText = `${hp2} / 100`;
             document.getElementById('p1-health').style.width = hp1 + '%'; document.getElementById('p2-health').style.width = hp2 + '%';
             setTimeout(() => { if(document.getElementById('p1-health-back')) { document.getElementById('p1-health-back').style.width = hp1 + '%'; document.getElementById('p2-health-back').style.width = hp2 + '%'; } }, 150);
-            document.getElementById('p1-status').innerText = Date.now() < player1.invincibleUntil ? '🛡️無敵' : (player1.poisonTicks > 0 ? '🤢中毒' : '');
-            document.getElementById('p2-status').innerText = Date.now() < player2.invincibleUntil ? '🛡️無敵' : (player2.poisonTicks > 0 ? '🤢中毒' : '');
         }
 
         function checkHit(att, def) {
@@ -412,7 +451,7 @@
                 if (proj.x > target.x && proj.x < target.x + target.baseWidth && proj.y > target.y && proj.y < target.y + target.baseHeight) {
                     let owner = proj.ownerId === 1 ? player1 : player2; let baseDmg = owner.weapon.damage; let finalDmg = Date.now() < owner.dmgBuffUntil ? baseDmg * 2 : baseDmg;
                     target.takeDamage(finalDmg, owner); createHitExplosion(proj.x, proj.y, '#9c88ff'); projectiles.splice(idx, 1); updateHealthUI();
-                    if(target.health <= 0) endGame(`PLAYER ${owner.id} 贏了！`);
+                    if(target.health <= 0) endGame(`${owner.name} 贏了！`);
                 }
                 if(proj.x < 0 || proj.x > canvas.width) projectiles.splice(idx, 1);
             });
@@ -422,14 +461,14 @@
                 player2.takeDamage(finalDmg, player1); createHitExplosion(player2.x + 20, player2.y + 35, '#ff4757');
                 if (player1.weaponType === 'sword' && isSkill) player2.vx += player1.facing === 'right' ? 15 : -15;
                 if (player1.weaponType === 'dagger' && isSkill) player2.poisonTicks = 5;
-                updateHealthUI(); player1.isAttacking = false; if(player2.health <= 0) endGame("PLAYER 1 贏了！");
+                updateHealthUI(); player1.isAttacking = false; if(player2.health <= 0) endGame(`${player1.name} 贏了！`);
             }
             if (player2.isAttacking && player2.weaponType !== 'staff' && checkHit(player2, player1)) {
                 let isSkill = player2.attackType === 'skill'; let baseDmg = isSkill ? player2.weapon.damage * 1.8 : player2.weapon.damage; let finalDmg = Date.now() < player2.dmgBuffUntil ? baseDmg * 2 : baseDmg;
                 player1.takeDamage(finalDmg, player2); createHitExplosion(player1.x + 20, player1.y + 35, '#ff4757');
                 if (player2.weaponType === 'sword' && isSkill) player1.vx += player2.facing === 'right' ? 15 : -15;
                 if (player2.weaponType === 'dagger' && isSkill) player1.poisonTicks = 5;
-                updateHealthUI(); player2.isAttacking = false; if(player1.health <= 0) endGame("PLAYER 2 贏了！");
+                updateHealthUI(); player2.isAttacking = false; if(player1.health <= 0) endGame(`${player2.name} 贏了！`);
             }
             particles.forEach((p, idx) => { p.update(); p.draw(); if(p.alpha <= 0) particles.splice(idx, 1); }); ctx.restore();
         }
@@ -437,7 +476,7 @@
         function endGame(txt) { gameOver = true; document.getElementById('game-over-screen').classList.remove('hidden'); document.getElementById('winner-text').innerText = txt; }
         function resetToSelect() { document.getElementById('game-over-screen').classList.add('hidden'); document.getElementById('weapon-select-screen').classList.remove('hidden'); document.getElementById('touch-controls').classList.add('menu-active'); }
 
-        /* 📱 補齊核心：觸控搖桿類別與邏輯定義 */
+        /* 📱 觸控搖桿核心類別 */
         class TouchJoystick {
             constructor(zoneId, knobId) {
                 this.zone = document.getElementById(zoneId); this.knob = document.getElementById(knobId);
@@ -457,7 +496,6 @@
             }
         }
 
-        // 綁定搖桿與戰鬥攻擊按鈕觸控事件
         const p1Joystick = new TouchJoystick('p1-joystick-zone', 'p1-knob');
         const p2Joystick = new TouchJoystick('p2-joystick-zone', 'p2-knob');
 
