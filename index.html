@@ -3,240 +3,341 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>雙人單機競技場 - iPad 同屏對戰</title>
+    <title>Mini Brawl Ultra - 自選武器拉桿版</title>
     <style>
         body {
-            margin: 0;
-            padding: 0;
-            background-color: #222;
-            color: white;
-            font-family: system-ui, -apple-system, sans-serif;
-            text-align: center;
-            overflow: hidden;
-            touch-action: none; /* 停用 iPad 雙擊放大 */
-            user-select: none;   /* 防止玩到一半選取文字 */
+            margin: 0; padding: 0; background-color: #1a1a1a;
+            color: white; font-family: system-ui, sans-serif; text-align: center;
+            overflow: hidden; touch-action: none; user-select: none;
         }
+        #game-container { position: relative; display: inline-block; margin-top: 5px; border: 4px solid #333; background-color: #2c3e50; }
+        canvas { display: block; }
 
-        h1 {
-            margin: 10px 0 5px 0;
-            font-size: 24px;
+        /* 頂部 UI 血條 */
+        #ui {
+            position: absolute; top: 0; left: 0; width: 100%;
+            display: flex; justify-content: space-between; padding: 10px 20px; box-sizing: border-box;
+            background: linear-gradient(to bottom, rgba(0,0,0,0.8), rgba(0,0,0,0)); pointer-events: none;
         }
+        .player-hud { width: 35%; }
+        .bar-container { width: 100%; height: 16px; background: #444; border: 1.5px solid #fff; border-radius: 3px; overflow: hidden; margin-top: 4px; }
+        .bar { width: 100%; height: 100%; transition: width 0.1s ease; }
+        #p1-health { background: #2ecc71; }
+        #p2-health { background: #3498db; float: right; }
+        .weapon-tag { font-size: 12px; color: #f1c40f; }
 
-        p {
-            margin: 0 0 10px 0;
-            color: #aaa;
-            font-size: 14px;
+        /* 武器選擇畫面 (覆蓋在遊戲上) */
+        #weapon-select-screen {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.9); z-index: 20; display: flex; flex-direction: column; justify-content: center; align-items: center;
         }
+        .select-row { display: flex; gap: 40px; margin: 20px; }
+        .player-box { background: #333; padding: 15px; border-radius: 8px; border: 2px solid #555; }
+        .player-box h3 { margin-top: 0; }
+        .weapon-btn { padding: 10px 20px; font-size: 16px; margin: 5px; cursor: pointer; background: #555; color: white; border: 1px solid #fff; border-radius: 5px; }
+        .weapon-btn.selected { background: #e74c3c; font-weight: bold; }
+        #start-game-btn { padding: 12px 40px; font-size: 20px; background: #2ecc71; color: white; border: none; border-radius: 5px; cursor: pointer; margin-top: 20px; }
 
-        #game-container {
-            position: relative;
-            display: inline-block;
-            border: 3px solid #fff;
-            background-color: #34495e;
-            box-shadow: 0 0 15px rgba(0,0,0,0.5);
-        }
-
-        canvas {
-            display: block;
-        }
-
-        /* 📱 iPad 專用：螢幕兩側觸控按鈕 */
-        #touch-controls {
-            position: absolute;
-            bottom: 15px;
-            left: 0;
-            width: 100%;
-            box-sizing: border-box;
-            padding: 0 20px;
-        }
-
-        .control-group {
-            display: inline-block;
-        }
+        /* 📱 iPad 操控區 (拉桿與按鈕) */
+        #touch-controls { position: absolute; bottom: 10px; left: 0; width: 100%; height: 130px; box-sizing: border-box; pointer-events: none; }
+        .joystick-zone { position: absolute; bottom: 10px; width: 120px; height: 120px; background: rgba(255,255,255,0.1); border-radius: 50%; border: 2px dashed rgba(255,255,255,0.3); pointer-events: auto; }
+        #p1-joystick-zone { left: 20px; }
+        #p2-joystick-zone { right: 160px; } /* P2 拉桿擺右邊偏內 */
         
-        /* P1 按鈕擺左邊，P2 按鈕擺右邊 */
-        .p1-ctrl { float: left; }
-        .p2-ctrl { float: right; }
-        .clear { clear: both; }
+        .joystick-knob { position: absolute; width: 50px; height: 50px; background: rgba(255,255,255,0.5); border-radius: 50%; top: 35px; left: 35px; }
+        
+        .action-zone { position: absolute; bottom: 10px; display: flex; gap: 10px; pointer-events: auto; }
+        #p1-actions { left: 160px; }
+        #p2-actions { right: 20px; }
 
-        .btn {
-            display: inline-block;
-            width: 60px;
-            height: 60px;
-            font-size: 22px;
-            font-weight: bold;
-            margin: 0 4px;
-            border-radius: 50%;
-            border: 2px solid white;
-            background: #555;
-            color: white;
-            outline: none;
-            touch-action: manipulation;
-            vertical-align: middle;
-        }
-        
-        /* 撳落去按鈕變色效果 */
-        .btn:active {
-            background: #fff;
-            color: #000;
-            transform: scale(0.95);
-        }
-        
-        /* 為左邊同右邊嘅跳躍/移動配唔同顏色方便識別 */
-        .btn-p1 { background-color: #2ecc71; }
-        .btn-p2 { background-color: #3498db; }
+        .btn { width: 55px; height: 55px; border-radius: 50%; border: 2px solid #fff; font-size: 18px; font-weight: bold; color: white; }
+        .btn-red { background: #e74c3c; }
+        .btn-yellow { background: #f1c40f; color: black; }
+
+        /* 遊戲結束 */
+        #game-over-screen { position: absolute; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:10; display:flex; flex-direction:column; justify-content:center; align-items:center; }
+        .hidden { display: none !important; }
     </style>
 </head>
 <body>
 
-    <h1>單機雙人競技場</h1>
-    <p>iPad 放喺枱面，兩個人各坐一邊即刻玩得！</p>
-    
     <div id="game-container">
+        <div id="weapon-select-screen">
+            <h2>⚔️ 自選武器與技能 ⚔️</h2>
+            <div class="select-row">
+                <div class="player-box" id="p1-select">
+                    <h3 style="color: #2ecc71;">Player 1</h3>
+                    <button class="weapon-btn selected" onclick="selectWeapon(1, 'sword')">大劍 (平衡)</button><br>
+                    <button class="weapon-btn" onclick="selectWeapon(1, 'spear')">長槍 (手長)</button><br>
+                    <button class="weapon-btn" onclick="selectWeapon(1, 'dagger')">匕首 (攻速快)</button>
+                </div>
+                <div class="player-box" id="p2-select">
+                    <h3 style="color: #3498db;">Player 2</h3>
+                    <button class="weapon-btn selected" onclick="selectWeapon(2, 'sword')">大劍 (平衡)</button><br>
+                    <button class="weapon-btn" onclick="selectWeapon(2, 'spear')">長槍 (手長)</button><br>
+                    <button class="weapon-btn" onclick="selectWeapon(2, 'dagger')">匕首 (攻速快)</button>
+                </div>
+            </div>
+            <button id="start-game-btn" onclick="startGame()">戰鬥開始 !!</button>
+        </div>
+
+        <div id="ui">
+            <div class="player-hud" style="text-align: left;">
+                <span style="color:#2ecc71; font-weight:bold;">P1</span> <span id="p1-w-tag" class="weapon-tag"></span>
+                <div class="bar-container"><div id="p1-health" class="bar"></div></div>
+            </div>
+            <div class="player-hud" style="text-align: right;">
+                <span style="color:#3498db; font-weight:bold;">P2</span> <span id="p2-w-tag" class="weapon-tag"></span>
+                <div class="bar-container"><div id="p2-health" class="bar"></div></div>
+            </div>
+        </div>
+
         <canvas id="gameCanvas" width="800" height="420"></canvas>
 
         <div id="touch-controls">
-            <div class="control-group p1-ctrl">
-                <button class="btn btn-p1" id="p1-left">◀</button>
-                <button class="btn btn-p1" id="p1-up">▲</button>
-                <button class="btn btn-p1" id="p1-right">▶</button>
+            <div class="joystick-zone" id="p1-joystick-zone"><div class="joystick-knob" id="p1-knob"></div></div>
+            <div class="action-zone" id="p1-actions">
+                <button class="btn btn-red" id="p1-btn-atk">ATK</button>
+                <button class="btn btn-yellow" id="p1-btn-skr">SKL</button>
             </div>
-            
-            <div class="control-group p2-ctrl">
-                <button class="btn btn-p2" id="p2-left">◀</button>
-                <button class="btn btn-p2" id="p2-up">▲</button>
-                <button class="btn btn-p2" id="p2-right">▶</button>
+
+            <div class="joystick-zone" id="p2-joystick-zone"><div class="joystick-knob" id="p2-knob"></div></div>
+            <div class="action-zone" id="p2-actions">
+                <button class="btn btn-yellow" id="p2-btn-skr">SKL</button>
+                <button class="btn btn-red" id="p2-btn-atk">ATK</button>
             </div>
-            <div class="clear"></div>
+        </div>
+
+        <div id="game-over-screen" class="hidden">
+            <h1 id="winner-text" style="font-size:36px; color:#f1c40f;"></h1>
+            <button id="start-game-btn" onclick="resetToSelect()">返去選角</button>
         </div>
     </div>
 
     <script>
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
+        const GRAVITY = 0.6;
 
-        const GRAVITY = 0.6; // 重力：數值越大跌得越快
-        const SPEED = 5;     // 左右移動速度
+        // 武器數值設定表
+        const WEAPON_TYPES = {
+            sword:  { name: "大劍", range: 80,  height: 45, damage: 8,  cooldown: 200, color: '#f1c40f' },
+            spear:  { name: "長槍", range: 130, height: 25, damage: 6,  cooldown: 300, color: '#e67e22' },
+            dagger: { name: "匕首", range: 50,  height: 40, damage: 4,  cooldown: 100, color: '#e74c3c' }
+        };
 
-        // 紀錄兩個玩家嘅按鍵與觸控狀態
-        const p1Keys = { left: false, right: false };
-        const p2Keys = { left: false, right: false };
+        let p1SelectedWeapon = 'sword';
+        let p2SelectedWeapon = 'sword';
+        let gameOver = false;
 
-        // 角色 Blueprint (類別)
-        class Player {
-            constructor({ x, y, color }) {
-                this.x = x;
-                this.y = y;
-                this.vx = 0; // X 軸速度
-                this.vy = 0; // Y 軸速度
-                this.width = 40;
-                this.height = 40;
+        class Fighter {
+            constructor({ x, color, id, weaponType }) {
+                this.id = id;
+                this.x = x; this.y = 100;
+                this.vx = 0; this.vy = 0;
+                this.width = 40; this.height = 85;
                 this.color = color;
+                this.health = 100;
+                this.facing = id === 1 ? 'right' : 'left';
+                this.isAttacking = false;
+                this.attackType = 'normal'; // 'normal' 或 'skill'
+                this.flash = 0;
+
+                // 根據選定武器初始化數值
+                this.setWeapon(weaponType);
+            }
+
+            setWeapon(type) {
+                this.weapon = WEAPON_TYPES[type];
+                this.attackBox = { width: this.weapon.range, height: this.weapon.height };
             }
 
             draw() {
-                ctx.fillStyle = this.color;
+                ctx.fillStyle = this.flash > 0 && Math.floor(this.flash/3)%2===0 ? '#fff' : this.color;
+                if(this.flash > 0) this.flash--;
                 ctx.fillRect(this.x, this.y, this.width, this.height);
+
+                // 畫眼睛
+                ctx.fillStyle = '#000';
+                ctx.fillRect(this.facing === 'right' ? this.x + 28 : this.x + 6, this.y + 15, 7, 7);
+
+                // 畫攻擊特效
+                if (this.isAttacking) {
+                    ctx.fillStyle = this.attackType === 'skill' ? 'rgba(155, 89, 182, 0.7)' : 'rgba(255,255,255,0.5)';
+                    let ax = this.facing === 'right' ? this.x + this.width : this.x - this.attackBox.width;
+                    let ay = this.y + 20;
+                    ctx.fillRect(ax, ay, this.attackBox.width, this.attackBox.height);
+                }
             }
 
             update() {
                 this.draw();
+                this.x += this.vx; this.y += this.vy;
 
-                // 應用速度
-                this.x += this.vx;
-                this.y += this.vy;
-
-                // 地面碰撞（留返 30px 做地下草地/地板）
+                // 重力與地面限制
                 if (this.y + this.height + this.vy >= canvas.height - 30) {
-                    this.vy = 0;
-                    this.y = canvas.height - 30 - this.height;
-                } else {
-                    this.vy += GRAVITY; // 如果喺條空，就會受重力影響向下加速
-                }
+                    this.vy = 0; this.y = canvas.height - 30 - this.height;
+                } else { this.vy += GRAVITY; }
 
-                // 左右邊界限制
                 if (this.x < 0) this.x = 0;
                 if (this.x + this.width > canvas.width) this.x = canvas.width - this.width;
             }
+
+            attack(type) {
+                if (!this.isAttacking) {
+                    this.isAttacking = true;
+                    this.attackType = type;
+                    
+                    // 如果是大招 (SKL)，攻擊盒範圍暫時變大 1.5 倍
+                    if(type === 'skill') { this.attackBox.width = this.weapon.range * 1.5; }
+                    else { this.attackBox.width = this.weapon.range; }
+
+                    setTimeout(() => { this.isAttacking = false; }, this.weapon.cooldown);
+                }
+            }
         }
 
-        // 建立兩個玩家物件
-        const player1 = new Player({ x: 150, y: 200, color: '#2ecc71' }); // P1 綠色
-        const player2 = new Player({ x: 600, y: 200, color: '#3498db' }); // P2 藍色
+        let player1, player2;
 
-        // 遊戲動畫主循環（每秒執行約 60 次）
-        function gameLoop() {
-            window.requestAnimationFrame(gameLoop);
+        // 選擇武器 UI 切換
+        function selectWeapon(pId, type) {
+            if(pId === 1) {
+                p1SelectedWeapon = type;
+                document.querySelectorAll('#p1-select .weapon-btn').forEach(b => b.classList.remove('selected'));
+            } else {
+                p2SelectedWeapon = type;
+                document.querySelectorAll('#p2-select .weapon-btn').forEach(b => b.classList.remove('selected'));
+            }
+            event.target.classList.add('selected');
+        }
 
-            // 1. 清空舊畫面，畫上背景與地面
-            ctx.fillStyle = '#34495e';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-            ctx.fillStyle = '#2c3e50'; // 地面顏色
-            ctx.fillRect(0, canvas.height - 30, canvas.width, 30);
+        function startGame() {
+            document.getElementById('weapon-select-screen').classList.add('hidden');
+            document.getElementById('p1-w-tag').innerText = `(${WEAPON_TYPES[p1SelectedWeapon].name})`;
+            document.getElementById('p2-w-tag').innerText = `(${WEAPON_TYPES[p2SelectedWeapon].name})`;
+            
+            player1 = new Fighter({ x: 150, color: '#2ecc71', id: 1, weaponType: p1SelectedWeapon });
+            player2 = new Fighter({ x: 600, color: '#3498db', id: 2, weaponType: p2SelectedWeapon });
+            
+            gameOver = false;
+            document.getElementById('game-over-screen').classList.add('hidden');
+            document.getElementById('p1-health').style.width = '100%';
+            document.getElementById('p2-health').style.width = '100%';
+            
+            animate();
+        }
 
-            // 2. 根據目前按鍵狀態，更新 P1 速度
-            player1.vx = 0;
-            if (p1Keys.left) player1.vx = -SPEED;
-            if (p1Keys.right) player1.vx = SPEED;
+        function checkHit(att, def) {
+            let ax = att.facing === 'right' ? att.x + att.width : att.x - att.attackBox.width;
+            let ay = att.y + 20;
+            return (
+                ax + att.attackBox.width >= def.x && ax <= def.x + def.width &&
+                ay + att.attackBox.height >= def.y && ay <= def.y + def.height
+            );
+        }
 
-            // 3. 根據目前按鍵狀態，更新 P2 速度
-            player2.vx = 0;
-            if (p2Keys.left) player2.vx = -SPEED;
-            if (p2Keys.right) player2.vx = SPEED;
+        function animate() {
+            if (gameOver) return;
+            window.requestAnimationFrame(animate);
 
-            // 4. 讓兩個角色計算新位置並畫出嚟
+            ctx.fillStyle = '#34495e'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = '#2c3e50'; ctx.fillRect(0, canvas.height - 30, canvas.width, 30); // 地面
+
+            // 讀取拉桿物理移動數值
+            player1.vx = p1Joystick.dx * 5;
+            if(p1Joystick.dx > 0.1) player1.facing = 'right';
+            if(p1Joystick.dx < -0.1) player1.facing = 'left';
+            if(p1Joystick.dy < -0.6 && player1.vy === 0) player1.vy = -13; // 拉桿向上跳
+
+            player2.vx = p2Joystick.dx * 5;
+            if(p2Joystick.dx > 0.1) player2.facing = 'right';
+            if(p2Joystick.dx < -0.1) player2.facing = 'left';
+            if(p2Joystick.dy < -0.6 && player2.vy === 0) player2.vy = -13;
+
             player1.update();
             player2.update();
+
+            // 命中傷害計算
+            if (player1.isAttacking) {
+                if (checkHit(player1, player2)) {
+                    let dmg = player1.attackType === 'skill' ? player1.weapon.damage * 2 : player1.weapon.damage;
+                    player2.health -= dmg; player2.flash = 10;
+                    document.getElementById('p2-health').style.width = Math.max(0, player2.health) + '%';
+                    player1.isAttacking = false;
+                    if(player2.health <= 0) endGame("Player 1 (綠色) 獲勝！");
+                }
+            }
+            if (player2.isAttacking) {
+                if (checkHit(player2, player1)) {
+                    let dmg = player2.attackType === 'skill' ? player2.weapon.damage * 2 : player2.weapon.damage;
+                    player1.health -= dmg; player1.flash = 10;
+                    document.getElementById('p1-health').style.width = Math.max(0, player1.health) + '%';
+                    player2.isAttacking = false;
+                    if(player1.health <= 0) endGame("Player 2 (藍色) 獲勝！");
+                }
+            }
         }
 
-        // 啟動遊戲
-        gameLoop();
+        function endGame(txt) { gameOver = true; document.getElementById('game-over-screen').classList.remove('hidden'); document.getElementById('winner-text').innerText = txt; }
+        function resetToSelect() { document.getElementById('game-over-screen').classList.add('hidden'); document.getElementById('weapon-select-screen').classList.remove('hidden'); }
 
-        // 📱 iPad 觸控事件綁定函式 (解決多點觸控，兩個人可以同時撳)
-        function setupTouch(elementId, pressCallback, releaseCallback) {
-            const btn = document.getElementById(elementId);
-            if (!btn) return;
+        // 🕹️ 核心技術：iPad 虛擬拉桿（Joystick）演算法
+        class TouchJoystick {
+            constructor(zoneId, knobId) {
+                this.zone = document.getElementById(zoneId);
+                this.knob = document.getElementById(knobId);
+                this.dx = 0; this.dy = 0; // 傳給遊戲外面的移動比例 (-1 至 1)
+                this.activeTouchId = null;
+                this.init();
+            }
+            init() {
+                this.zone.addEventListener('touchstart', (e) => {
+                    e.preventDefault();
+                    if (this.activeTouchId === null) {
+                        let touch = e.changedTouches[0]; this.activeTouchId = touch.identifier; this.handleMove(touch);
+                    }
+                });
+                this.zone.addEventListener('touchmove', (e) => {
+                    e.preventDefault();
+                    for(let touch of e.touches) {
+                        if(touch.identifier === this.activeTouchId) { this.handleMove(touch); break; }
+                    }
+                });
+                const stop = (e) => {
+                    for(let touch of e.changedTouches) {
+                        if(touch.identifier === this.activeTouchId) {
+                            this.activeTouchId = null; this.dx = 0; this.dy = 0; this.knob.style.transform = `translate(0px, 0px)`; break;
+                        }
+                    }
+                };
+                this.zone.addEventListener('touchend', stop); this.zone.addEventListener('touchcancel', stop);
+            }
+            handleMove(touch) {
+                let rect = this.zone.getBoundingClientRect();
+                let centerX = rect.left + rect.width / 2; let centerY = rect.top + rect.height / 2;
+                let deltaX = touch.clientX - centerX; let deltaY = touch.clientY - centerY;
+                let distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+                let maxRadius = rect.width / 2 - 10; // 限制拉桿移動邊界
 
-            btn.addEventListener('touchstart', (e) => {
-                e.preventDefault(); // 阻擋預設滾動/放大行為
-                pressCallback();
-            });
-            btn.addEventListener('touchend', (e) => {
-                e.preventDefault();
-                releaseCallback();
-            });
+                if (distance > maxRadius) { deltaX = (deltaX / distance) * maxRadius; deltaY = (deltaY / distance) * maxRadius; distance = maxRadius; }
+                this.knob.style.transform = `translate(${deltaX}px, ${deltaY}px)`;
+                this.dx = deltaX / maxRadius; this.dy = deltaY / maxRadius; // 正規化為 -1 到 1 數值
+            }
         }
 
-        // 綁定 P1 (左邊綠色按鈕)
-        setupTouch('p1-left',  () => p1Keys.left = true,  () => p1Keys.left = false);
-        setupTouch('p1-right', () => p1Keys.right = true, () => p1Keys.right = false);
-        setupTouch('p1-up',    () => { if (player1.vy === 0) player1.vy = -13; }, null); // 踩地先准跳
+        // 初始化 P1 & P2 虛擬拉桿
+        const p1Joystick = new TouchJoystick('p1-joystick-zone', 'p1-knob');
+        const p2Joystick = new TouchJoystick('p2-joystick-zone', 'p2-knob');
 
-        // 綁定 P2 (右邊藍色按鈕)
-        setupTouch('p2-left',  () => p2Keys.left = true,  () => p2Keys.left = false);
-        setupTouch('p2-right', () => p2Keys.right = true, () => p2Keys.right = false);
-        setupTouch('p2-up',    () => { if (player2.vy === 0) player2.vy = -13; }, null);
-
-        // ⌨️ 電腦鍵盤支援 (方便你喺 VS Code 用電腦做測試)
-        window.addEventListener('keydown', (e) => {
-            // P1: WASD
-            if (e.key === 'a' || e.key === 'A') p1Keys.left = true;
-            if (e.key === 'd' || e.key === 'D') p1Keys.right = true;
-            if ((e.key === 'w' || e.key === 'W') && player1.vy === 0) player1.vy = -13;
-
-            // P2: 方向鍵
-            if (e.key === 'ArrowLeft') p2Keys.left = true;
-            if (e.key === 'ArrowRight') p2Keys.right = true;
-            if (e.key === 'ArrowUp' && player2.vy === 0) player2.vy = -13;
-        });
-
-        window.addEventListener('keyup', (e) => {
-            if (e.key === 'a' || e.key === 'A') p1Keys.left = false;
-            if (e.key === 'd' || e.key === 'D') p1Keys.right = false;
-
-            if (e.key === 'ArrowLeft') p2Keys.left = false;
-            if (e.key === 'ArrowRight') p2Keys.right = false;
-        });
+        // 綁定右邊動作按鈕
+        const setupBtn = (id, cb) => {
+            let el = document.getElementById(id);
+            el.addEventListener('touchstart', (e) => { e.preventDefault(); cb(); });
+        };
+        setupBtn('p1-btn-atk', () => player1.attack('normal'));
+        setupBtn('p1-btn-skr', () => player1.attack('skill'));
+        setupBtn('p2-btn-atk', () => player2.attack('normal'));
+        setupBtn('p2-btn-skr', () => player2.attack('skill'));
     </script>
 </body>
 </html>
