@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>雙人單機競技場 - iPad 同屏對戰</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #222;
+            color: white;
+            font-family: system-ui, -apple-system, sans-serif;
+            text-align: center;
+            overflow: hidden;
+            touch-action: none; /* 停用 iPad 雙擊放大 */
+            user-select: none;   /* 防止玩到一半選取文字 */
+        }
+
+        h1 {
+            margin: 10px 0 5px 0;
+            font-size: 24px;
+        }
+
+        p {
+            margin: 0 0 10px 0;
+            color: #aaa;
+            font-size: 14px;
+        }
+
+        #game-container {
+            position: relative;
+            display: inline-block;
+            border: 3px solid #fff;
+            background-color: #34495e;
+            box-shadow: 0 0 15px rgba(0,0,0,0.5);
+        }
+
+        canvas {
+            display: block;
+        }
+
+        /* 📱 iPad 專用：螢幕兩側觸控按鈕 */
+        #touch-controls {
+            position: absolute;
+            bottom: 15px;
+            left: 0;
+            width: 100%;
+            box-sizing: border-box;
+            padding: 0 20px;
+        }
+
+        .control-group {
+            display: inline-block;
+        }
+        
+        /* P1 按鈕擺左邊，P2 按鈕擺右邊 */
+        .p1-ctrl { float: left; }
+        .p2-ctrl { float: right; }
+        .clear { clear: both; }
+
+        .btn {
+            display: inline-block;
+            width: 60px;
+            height: 60px;
+            font-size: 22px;
+            font-weight: bold;
+            margin: 0 4px;
+            border-radius: 50%;
+            border: 2px solid white;
+            background: #555;
+            color: white;
+            outline: none;
+            touch-action: manipulation;
+            vertical-align: middle;
+        }
+        
+        /* 撳落去按鈕變色效果 */
+        .btn:active {
+            background: #fff;
+            color: #000;
+            transform: scale(0.95);
+        }
+        
+        /* 為左邊同右邊嘅跳躍/移動配唔同顏色方便識別 */
+        .btn-p1 { background-color: #2ecc71; }
+        .btn-p2 { background-color: #3498db; }
+    </style>
+</head>
+<body>
+
+    <h1>單機雙人競技場</h1>
+    <p>iPad 放喺枱面，兩個人各坐一邊即刻玩得！</p>
+    
+    <div id="game-container">
+        <canvas id="gameCanvas" width="800" height="420"></canvas>
+
+        <div id="touch-controls">
+            <div class="control-group p1-ctrl">
+                <button class="btn btn-p1" id="p1-left">◀</button>
+                <button class="btn btn-p1" id="p1-up">▲</button>
+                <button class="btn btn-p1" id="p1-right">▶</button>
+            </div>
+            
+            <div class="control-group p2-ctrl">
+                <button class="btn btn-p2" id="p2-left">◀</button>
+                <button class="btn btn-p2" id="p2-up">▲</button>
+                <button class="btn btn-p2" id="p2-right">▶</button>
+            </div>
+            <div class="clear"></div>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        const GRAVITY = 0.6; // 重力：數值越大跌得越快
+        const SPEED = 5;     // 左右移動速度
+
+        // 紀錄兩個玩家嘅按鍵與觸控狀態
+        const p1Keys = { left: false, right: false };
+        const p2Keys = { left: false, right: false };
+
+        // 角色 Blueprint (類別)
+        class Player {
+            constructor({ x, y, color }) {
+                this.x = x;
+                this.y = y;
+                this.vx = 0; // X 軸速度
+                this.vy = 0; // Y 軸速度
+                this.width = 40;
+                this.height = 40;
+                this.color = color;
+            }
+
+            draw() {
+                ctx.fillStyle = this.color;
+                ctx.fillRect(this.x, this.y, this.width, this.height);
+            }
+
+            update() {
+                this.draw();
+
+                // 應用速度
+                this.x += this.vx;
+                this.y += this.vy;
+
+                // 地面碰撞（留返 30px 做地下草地/地板）
+                if (this.y + this.height + this.vy >= canvas.height - 30) {
+                    this.vy = 0;
+                    this.y = canvas.height - 30 - this.height;
+                } else {
+                    this.vy += GRAVITY; // 如果喺條空，就會受重力影響向下加速
+                }
+
+                // 左右邊界限制
+                if (this.x < 0) this.x = 0;
+                if (this.x + this.width > canvas.width) this.x = canvas.width - this.width;
+            }
+        }
+
+        // 建立兩個玩家物件
+        const player1 = new Player({ x: 150, y: 200, color: '#2ecc71' }); // P1 綠色
+        const player2 = new Player({ x: 600, y: 200, color: '#3498db' }); // P2 藍色
+
+        // 遊戲動畫主循環（每秒執行約 60 次）
+        function gameLoop() {
+            window.requestAnimationFrame(gameLoop);
+
+            // 1. 清空舊畫面，畫上背景與地面
+            ctx.fillStyle = '#34495e';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = '#2c3e50'; // 地面顏色
+            ctx.fillRect(0, canvas.height - 30, canvas.width, 30);
+
+            // 2. 根據目前按鍵狀態，更新 P1 速度
+            player1.vx = 0;
+            if (p1Keys.left) player1.vx = -SPEED;
+            if (p1Keys.right) player1.vx = SPEED;
+
+            // 3. 根據目前按鍵狀態，更新 P2 速度
+            player2.vx = 0;
+            if (p2Keys.left) player2.vx = -SPEED;
+            if (p2Keys.right) player2.vx = SPEED;
+
+            // 4. 讓兩個角色計算新位置並畫出嚟
+            player1.update();
+            player2.update();
+        }
+
+        // 啟動遊戲
+        gameLoop();
+
+        // 📱 iPad 觸控事件綁定函式 (解決多點觸控，兩個人可以同時撳)
+        function setupTouch(elementId, pressCallback, releaseCallback) {
+            const btn = document.getElementById(elementId);
+            if (!btn) return;
+
+            btn.addEventListener('touchstart', (e) => {
+                e.preventDefault(); // 阻擋預設滾動/放大行為
+                pressCallback();
+            });
+            btn.addEventListener('touchend', (e) => {
+                e.preventDefault();
+                releaseCallback();
+            });
+        }
+
+        // 綁定 P1 (左邊綠色按鈕)
+        setupTouch('p1-left',  () => p1Keys.left = true,  () => p1Keys.left = false);
+        setupTouch('p1-right', () => p1Keys.right = true, () => p1Keys.right = false);
+        setupTouch('p1-up',    () => { if (player1.vy === 0) player1.vy = -13; }, null); // 踩地先准跳
+
+        // 綁定 P2 (右邊藍色按鈕)
+        setupTouch('p2-left',  () => p2Keys.left = true,  () => p2Keys.left = false);
+        setupTouch('p2-right', () => p2Keys.right = true, () => p2Keys.right = false);
+        setupTouch('p2-up',    () => { if (player2.vy === 0) player2.vy = -13; }, null);
+
+        // ⌨️ 電腦鍵盤支援 (方便你喺 VS Code 用電腦做測試)
+        window.addEventListener('keydown', (e) => {
+            // P1: WASD
+            if (e.key === 'a' || e.key === 'A') p1Keys.left = true;
+            if (e.key === 'd' || e.key === 'D') p1Keys.right = true;
+            if ((e.key === 'w' || e.key === 'W') && player1.vy === 0) player1.vy = -13;
+
+            // P2: 方向鍵
+            if (e.key === 'ArrowLeft') p2Keys.left = true;
+            if (e.key === 'ArrowRight') p2Keys.right = true;
+            if (e.key === 'ArrowUp' && player2.vy === 0) player2.vy = -13;
+        });
+
+        window.addEventListener('keyup', (e) => {
+            if (e.key === 'a' || e.key === 'A') p1Keys.left = false;
+            if (e.key === 'd' || e.key === 'D') p1Keys.right = false;
+
+            if (e.key === 'ArrowLeft') p2Keys.left = false;
+            if (e.key === 'ArrowRight') p2Keys.right = false;
+        });
+    </script>
+</body>
+</html>
