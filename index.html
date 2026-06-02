@@ -1,9 +1,9 @@
-<!DOCTYPE html>
+<<!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Mini Brawl Ultra - Mush </title>
+    <title>Mini Brawl Ultra - Mush (Enhanced)</title>
     <style>
         body {
             margin: 0; padding: 0; background-color: #0b0c10;
@@ -12,23 +12,18 @@
             display: flex; flex-direction: column; align-items: center; justify-content: center;
             height: 100vh; box-sizing: border-box;
         }
-        
         #game-wrapper {
             width: 100%; max-width: 840px;
             display: flex; flex-direction: column; align-items: center;
             padding: 10px; box-sizing: border-box;
         }
-
         #game-container { 
             position: relative; width: 100%;
             border: 4px solid #1f242d; background-color: #1f272e; 
             box-shadow: 0 12px 40px rgba(0,0,0,0.8); border-radius: 16px;
             overflow: hidden; aspect-ratio: 800 / 380;
         }
-        
         canvas { display: block; width: 100%; height: 100%; }
-
-        /* 👑 頂部 UI */
         #ui {
             position: absolute; top: 0; left: 0; width: 100%;
             display: flex; justify-content: space-between; padding: 10px 15px; box-sizing: border-box;
@@ -43,32 +38,26 @@
         #p2-health { background: linear-gradient(90deg, #00a8ff, #0097e6); float: right; }
         .state-tag { color: #fbc531; font-size: 11px; margin-left: 5px; font-weight: normal; }
 
-        /* ⚔️ 武器選單與命名佈局 */
         #weapon-select-screen {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(11, 12, 16, 0.98); z-index: 30;
             display: flex; flex-direction: column; justify-content: space-between; align-items: center;
             padding: 12px; box-sizing: border-box;
         }
-        
         .select-main-area {
             display: flex; justify-content: space-between; align-items: stretch; width: 100%; flex-grow: 1; gap: 15px;
         }
-
         .player-box { 
             background: #15181f; padding: 8px 12px; border-radius: 10px; border: 2px solid #2f3640; 
             width: 42%; display: flex; flex-direction: column; justify-content: flex-start; box-sizing: border-box; 
         }
         .player-box h3 { margin: 0 0 6px 0; font-size: 16px; text-align: center; font-weight: 900; }
-        
-        /* 🏷️ 名字輸入框樣式 */
         .name-input {
             width: 100%; padding: 6px; margin-bottom: 8px; border-radius: 6px;
             border: 2px solid #4f5b66; background: #21252f; color: white;
             font-size: 13px; text-align: center; box-sizing: border-box;
         }
         .name-input:focus { border-color: #fbc531; outline: none; }
-
         .weapon-btn { 
             width: 100%; padding: 5px 8px; margin: 2px 0; cursor: pointer; 
             background: #21252f; color: white; border: 2px solid transparent; border-radius: 6px; 
@@ -77,12 +66,9 @@
         .weapon-btn .w-name { font-weight: bold; font-size: 12px; color: #f5f6fa; }
         .weapon-btn .w-desc { font-size: 9px; color: #9c88ff; margin-top: 1px; }
         .weapon-btn.selected { background: #e84118; border-color: #fff; box-shadow: 0 0 8px rgba(232,65,24,0.5); }
-        
-        /* 🎯 開始按鈕獨立核心區 */
         .center-action-box {
             width: 14%; display: flex; flex-direction: column; justify-content: center; align-items: center;
         }
-
         #start-game-btn { 
             width: 85px; height: 85px; border-radius: 50%; font-size: 16px; font-weight: 900; 
             background: linear-gradient(135deg, #4cd137, #44bd32); color: white; 
@@ -95,15 +81,12 @@
             50% { transform: scale(1.06); box-shadow: 0 0 22px rgba(76,209,55,0.9); }
             100% { transform: scale(1); box-shadow: 0 0 12px rgba(76,209,55,0.6); }
         }
-
-        /* 📱 底部操控區 */
         #touch-controls { 
             width: 100%; height: 130px; margin-top: 10px;
             display: flex; justify-content: space-between; align-items: center;
             box-sizing: border-box; padding: 0 5px;
         }
         #touch-controls.menu-active { pointer-events: none; opacity: 0.3; }
-
         .joystick-container { width: 100px; height: 100px; }
         .joystick-zone { width: 100%; height: 100%; background: rgba(255,255,255,0.05); border-radius: 50%; border: 2px solid rgba(255,255,255,0.15); position: relative; pointer-events: auto; }
         .joystick-knob { position: absolute; width: 40px; height: 40px; background: rgba(255,255,255,0.35); border-radius: 50%; top: 28px; left: 28px; border: 1px solid #fff; }
@@ -114,73 +97,36 @@
         .btn-yellow { background: linear-gradient(135deg, #ffa502, #eccc68); color: #1e272e; }
         .cd-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.8); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 12px; font-weight: bold; pointer-events: none; opacity: 0; }
         .cd-overlay.active { opacity: 1; }
-
         #game-over-screen { position: absolute; top:0; left:0; width:100%; height:100%; background:rgba(11,12,16,0.95); z-index:15; display:flex; flex-direction:column; justify-content:center; align-items:center; }
         .hidden { display: none !important; }
     </style>
 </head>
 <body>
-
     <div id="game-wrapper">
         <div id="game-container">
             <div id="weapon-select-screen">
-                <h2 style="font-size: 18px; color: #fbc531; margin: 0 0 6px 0; font-weight:900; text-align:center; width:100%;">⚔️ MINI BRAWL ULTRA v5.4 ⚔️</h2>
-                
+                <h2 style="font-size: 18px; color: #fbc531; margin: 0 0 6px 0; font-weight:900; text-align:center; width:100%;">⚔️ MINI BRAWL ULTRA v6.0 ⚔️</h2>
                 <div class="select-main-area">
                     <div class="player-box" id="p1-select">
                         <h3 style="color: #4cd137;">PLAYER 1</h3>
                         <input type="text" id="p1-name-input" class="name-input" placeholder="輸入 P1 名字..." value="玩家1">
-                        
-                        <button class="weapon-btn selected" onclick="selectWeapon(1, 'sword', event)">
-                            <span class="w-name">🗡️ 超級無敵雷霆克拉斯大劍</span>
-                            <span class="w-desc">傷 10 | 範 85 | 大招：強力擊退</span>
-                        </button>
-                        <button class="weapon-btn" onclick="selectWeapon(1, 'spear', event)">
-                            <span class="w-name">🔱 正太扭腰一下直接躲長槍</span>
-                            <span class="w-desc">傷 8 | 範 100 | 大招：穿透突刺</span>
-                        </button>
-                        <button class="weapon-btn" onclick="selectWeapon(1, 'dagger', event)">
-                            <span class="w-name">🩸 黃思慧對Kelly最後的匕首</span>
-                            <span class="w-desc">傷 6 | 範 55 | 大招：劇毒扣血</span>
-                        </button>
-                        <button class="weapon-btn" onclick="selectWeapon(1, 'staff', event)">
-                            <span class="w-name">🔮 limited company 獨立法人杖</span>
-                            <span class="w-desc">傷 6 | 射法術彈 | 大招：全屏落雷</span>
-                        </button>
-                        <button class="weapon-btn" onclick="selectWeapon(1, 'shield', event)">
-                            <span class="w-name">🛡️ 斜方肌已達到一定高度神盾</span>
-                            <span class="w-desc">傷 7 | 被動反傷 | 大招：3秒無敵</span>
-                        </button>
+                        <button class="weapon-btn selected" onclick="selectWeapon(1, 'sword', event)"><span class="w-name">🗡️ 超級無敵雷霆克拉斯大劍</span><span class="w-desc">傷 9 | 範 85 | 大招：強力擊退</span></button>
+                        <button class="weapon-btn" onclick="selectWeapon(1, 'spear', event)"><span class="w-name">🔱 正太扭腰一下直接躲長槍</span><span class="w-desc">傷 7 | 範 105 | 大招：穿透突刺</span></button>
+                        <button class="weapon-btn" onclick="selectWeapon(1, 'dagger', event)"><span class="w-name">🩸 黃思慧對Kelly最後的匕首</span><span class="w-desc">傷 5 | 範 55 | 大招：劇毒扣血</span></button>
+                        <button class="weapon-btn" onclick="selectWeapon(1, 'staff', event)"><span class="w-name">🔮 limited company 獨立法人杖</span><span class="w-desc">傷 6 | 射法術彈 | 大招：全屏落雷</span></button>
+                        <button class="weapon-btn" onclick="selectWeapon(1, 'shield', event)"><span class="w-name">🛡️ 斜方肌已達到一定高度神盾</span><span class="w-desc">傷 7 | 被動反傷 | 大招：3秒無敵</span></button>
                     </div>
-
                     <div class="center-action-box">
                         <button id="start-game-btn" onclick="startGame()">⚔️<br>開戰</button>
                     </div>
-
                     <div class="player-box" id="p2-select">
                         <h3 style="color: #00a8ff;">PLAYER 2</h3>
                         <input type="text" id="p2-name-input" class="name-input" placeholder="輸入 P2 名字..." value="玩家2">
-                        
-                        <button class="weapon-btn selected" onclick="selectWeapon(2, 'sword', event)">
-                            <span class="w-name">🗡️ 超級無敵雷霆克拉斯大劍</span>
-                            <span class="w-desc">傷 10 | 範 85 | 大招：強力擊退</span>
-                        </button>
-                        <button class="weapon-btn" onclick="selectWeapon(2, 'spear', event)">
-                            <span class="w-name">🔱 正太扭腰一下直接躲長槍</span>
-                            <span class="w-desc">傷 8 | 範 100 | 大招：穿透突刺</span>
-                        </button>
-                        <button class="weapon-btn" onclick="selectWeapon(2, 'dagger', event)">
-                            <span class="w-name">🩸 黃思慧對Kelly最後的匕首</span>
-                            <span class="w-desc">傷 6 | 範 55 | 大招：劇毒扣血</span>
-                        </button>
-                        <button class="weapon-btn" onclick="selectWeapon(2, 'staff', event)">
-                            <span class="w-name">🔮 limited company 獨立法人杖</span>
-                            <span class="w-desc">傷 6 | 射法術彈 | 大招：全屏落雷</span>
-                        </button>
-                        <button class="weapon-btn" onclick="selectWeapon(2, 'shield', event)">
-                            <span class="w-name">🛡️ 斜方肌已達到一定高度神盾</span>
-                            <span class="w-desc">傷 7 | 被動反傷 | 大招：3秒無敵</span>
-                        </button>
+                        <button class="weapon-btn selected" onclick="selectWeapon(2, 'sword', event)"><span class="w-name">🗡️ 超級無敵雷霆克拉斯大劍</span><span class="w-desc">傷 9 | 範 85 | 大招：強力擊退</span></button>
+                        <button class="weapon-btn" onclick="selectWeapon(2, 'spear', event)"><span class="w-name">🔱 正太扭腰一下直接躲長槍</span><span class="w-desc">傷 7 | 範 105 | 大招：穿透突刺</span></button>
+                        <button class="weapon-btn" onclick="selectWeapon(2, 'dagger', event)"><span class="w-name">🩸 黃思慧對Kelly最後的匕首</span><span class="w-desc">傷 5 | 範 55 | 大招：劇毒扣血</span></button>
+                        <button class="weapon-btn" onclick="selectWeapon(2, 'staff', event)"><span class="w-name">🔮 limited company 獨立法人杖</span><span class="w-desc">傷 6 | 射法術彈 | 大招：全屏落雷</span></button>
+                        <button class="weapon-btn" onclick="selectWeapon(2, 'shield', event)"><span class="w-name">🛡️ 斜方肌已達到一定高度神盾</span><span class="w-desc">傷 7 | 被動反傷 | 大招：3秒無敵</span></button>
                     </div>
                 </div>
             </div>
@@ -229,12 +175,13 @@
         const ctx = canvas.getContext('2d');
         const GRAVITY = 0.55;
 
+        // 平衡調整後的武器數值
         const WEAPON_TYPES = {
-            sword:  { range: 85,  height: 40, damage: 10, cooldown: 800, skillCD: 3000,  fxColor: 'rgba(255, 255, 255, 0.6)' },
-            spear:  { range: 100, height: 22, damage: 8,  cooldown: 260, skillCD: 4000,  fxColor: 'rgba(230, 126, 34, 0.6)' },
-            dagger: { range: 55,  height: 45, damage: 6,  cooldown: 100,  skillCD: 2000,  fxColor: 'rgba(231, 76, 60, 0.7)' },
-            staff:  { range: 60,  height: 40, damage: 6,  cooldown: 350, skillCD: 5000,  fxColor: 'rgba(155, 89, 182, 0.6)' },
-            shield: { range: 65,  height: 55, damage: 7,  cooldown: 250, skillCD: 6000,  fxColor: 'rgba(52, 152, 219, 0.6)' }
+            sword:  { range: 85,  height: 40, damage: 9,  cooldown: 750, skillCD: 3500,  fxColor: 'rgba(255, 255, 255, 0.7)' },
+            spear:  { range: 105, height: 22, damage: 7,  cooldown: 280, skillCD: 4500,  fxColor: 'rgba(230, 126, 34, 0.7)' },
+            dagger: { range: 55,  height: 45, damage: 5,  cooldown: 120,  skillCD: 2200,  fxColor: 'rgba(231, 76, 60, 0.8)' },
+            staff:  { range: 60,  height: 40, damage: 6,  cooldown: 380, skillCD: 5000,  fxColor: 'rgba(155, 89, 182, 0.7)' },
+            shield: { range: 65,  height: 55, damage: 7,  cooldown: 300, skillCD: 6000,  fxColor: 'rgba(52, 152, 219, 0.7)' }
         };
 
         let gameOver = false;
@@ -242,38 +189,84 @@
         let particles = [];
         let projectiles = [];
         let activeRune = null;
+        let pickups = []; // 道具陣列
+        let cdIntervals = { p1: null, p2: null }; // 儲存技能CD計時器ID
+
+        // 星空背景點
+        let stars = [];
+        for (let i = 0; i < 60; i++) {
+            stars.push({ x: Math.random() * canvas.width, y: Math.random() * canvas.height, radius: Math.random() * 1.5 + 0.5, brightness: Math.random() * 0.5 + 0.5 });
+        }
 
         class Particle {
-            constructor(x, y, color) {
-                this.x = x; this.y = y; this.size = Math.random() * 4 + 2;
-                this.vx = (Math.random() - 0.5) * 8; this.vy = (Math.random() - 0.5) * 8 - 2;
+            constructor(x, y, color, sizeMultiplier = 1) {
+                this.x = x; this.y = y; this.size = (Math.random() * 4 + 2) * sizeMultiplier;
+                this.vx = (Math.random() - 0.5) * 10; this.vy = (Math.random() - 0.5) * 10 - 2;
                 this.color = color; this.alpha = 1; this.decay = Math.random() * 0.03 + 0.02;
             }
             update() { this.x += this.vx; this.y += this.vy; this.vy += 0.1; this.alpha -= this.decay; }
-            draw() { ctx.save(); ctx.globalAlpha = this.alpha; ctx.fillStyle = this.color; ctx.fillRect(this.x, this.y, this.size, this.size); ctx.restore(); }
+            draw() { if (this.alpha <= 0) return; ctx.save(); ctx.globalAlpha = this.alpha; ctx.fillStyle = this.color; ctx.fillRect(this.x, this.y, this.size, this.size); ctx.restore(); }
         }
 
         class Projectile {
             constructor(x, y, dir, ownerId) {
-                this.x = x; this.y = y; this.vx = dir === 'right' ? 8 : -8;
+                this.x = x; this.y = y; this.vx = dir === 'right' ? 9 : -9;
                 this.radius = 8; this.ownerId = ownerId; this.active = true;
             }
             update() { this.x += this.vx; }
-            draw() { ctx.fillStyle = '#9c88ff'; ctx.beginPath(); ctx.arc(this.x, this.y, this.radius, 0, Math.PI*2); ctx.fill(); }
+            draw() {
+                ctx.fillStyle = '#9c88ff';
+                ctx.shadowColor = '#9c88ff'; ctx.shadowBlur = 10;
+                ctx.beginPath(); ctx.arc(this.x, this.y, this.radius, 0, Math.PI*2); ctx.fill();
+                ctx.shadowBlur = 0;
+            }
         }
 
         class Rune {
             constructor() {
-                this.x = canvas.width / 2; this.y = canvas.height - 65;
-                this.type = Math.random() > 0.5 ? 'dmg' : 'heal'; this.radius = 12; this.pulse = 0;
+                this.x = canvas.width / 2 + (Math.random() - 0.5) * 200;
+                this.y = canvas.height - 65;
+                this.type = Math.random() > 0.5 ? 'dmg' : 'heal';
+                this.radius = 14; this.pulse = 0;
             }
             draw() {
                 this.pulse += 0.1; let r = this.radius + Math.sin(this.pulse) * 3;
                 ctx.fillStyle = this.type === 'dmg' ? '#fbc531' : '#4cd137';
                 ctx.beginPath(); ctx.arc(this.x, this.y, r, 0, Math.PI*2); ctx.fill();
-                ctx.fillStyle = '#fff'; ctx.font = '10px sans-serif'; ctx.textAlign = 'center';
+                ctx.fillStyle = '#fff'; ctx.font = 'bold 10px sans-serif'; ctx.textAlign = 'center';
                 ctx.fillText(this.type === 'dmg' ? '雙倍' : '治癒', this.x, this.y + 3);
             }
+        }
+
+        // 道具類別
+        class Pickup {
+            constructor(type) {
+                this.type = type;
+                this.x = 100 + Math.random() * (canvas.width - 200);
+                this.y = 40 + Math.random() * 100;
+                this.radius = 14;
+                this.lifetime = 180; // 約3秒
+                this.pulse = Math.random() * Math.PI * 2;
+                switch(type) {
+                    case 'health': this.color = '#ff4757'; this.icon = '♥'; break;
+                    case 'speed':  this.color = '#1e90ff'; this.icon = '⚡'; break;
+                    case 'shield': this.color = '#feca57'; this.icon = '🛡️'; break;
+                    case 'damage': this.color = '#ff6348'; this.icon = '⚔️'; break;
+                }
+            }
+            draw() {
+                this.pulse += 0.05;
+                let r = this.radius + Math.sin(this.pulse) * 2;
+                ctx.fillStyle = this.color;
+                ctx.shadowColor = this.color; ctx.shadowBlur = 10;
+                ctx.beginPath(); ctx.arc(this.x, this.y, r, 0, Math.PI*2); ctx.fill();
+                ctx.shadowBlur = 0;
+                ctx.fillStyle = 'white';
+                ctx.font = 'bold 14px sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillText(this.icon, this.x, this.y + 5);
+            }
+            update() { this.lifetime--; }
         }
 
         class Fighter {
@@ -283,7 +276,8 @@
                 this.facing = id === 1 ? 'right' : 'left'; this.isAttacking = false; this.attackType = 'normal';
                 this.flash = 0; this.scaleX = 1; this.scaleY = 1; this.nextSkillTime = 0;
                 this.poisonTicks = 0; this.invincibleUntil = 0; this.dmgBuffUntil = 0;
-                this.name = name || `P${id}`; // 儲存角色名字
+                this.speedBoostUntil = 0;
+                this.name = name || `P${id}`;
                 this.setWeapon(weaponType);
             }
             setWeapon(type) {
@@ -294,10 +288,9 @@
                 ctx.save(); let centerX = this.x + this.baseWidth / 2; let centerY = this.y + this.baseHeight;
                 ctx.translate(centerX, centerY); ctx.scale(this.scaleX, this.scaleY);
                 
-                // 判斷是否處於受傷閃爍狀態
                 let isFlashing = this.flash > 0 && Math.floor(this.flash / 2) % 2 === 0;
-                
                 if (Date.now() < this.invincibleUntil) ctx.fillStyle = '#fbc531';
+                else if (Date.now() < this.speedBoostUntil) ctx.fillStyle = '#1e90ff';
                 else if (this.poisonTicks > 0 && Math.floor(Date.now()/100)%2===0) ctx.fillStyle = '#2cd14d';
                 else ctx.fillStyle = isFlashing ? '#ffffff' : this.color;
                 
@@ -306,40 +299,65 @@
                 ctx.fillStyle = '#0f1115'; ctx.fillRect(this.facing === 'right' ? 10 : -17, -this.baseHeight + 16, 7, 7);
                 ctx.restore();
 
-                // 🏷️ 繪製動態懸浮名字 (隨角色移動，且受傷時同步變紅/閃爍)
+                // 動態懸浮名字
                 ctx.save();
                 ctx.font = 'bold 14px system-ui, sans-serif';
                 ctx.textAlign = 'center';
-                // 受傷閃爍時名字變成亮紅色，其餘時間與血條顏色一致
                 ctx.fillStyle = isFlashing ? '#ff4757' : this.color;
-                // 加點黑色陰影讓名字在戰鬥中更清晰
                 ctx.shadowColor = 'black';
                 ctx.shadowBlur = 4;
                 ctx.fillText(this.name, this.x + this.baseWidth / 2, this.y - 12);
                 ctx.restore();
 
-                if (Date.now() < this.dmgBuffUntil) { ctx.strokeStyle = '#fbc531'; ctx.lineWidth = 2; ctx.strokeRect(this.x - 4, this.y - 4, this.baseWidth + 8, this.baseHeight + 8); }
+                if (Date.now() < this.dmgBuffUntil) { 
+                    ctx.strokeStyle = '#fbc531'; ctx.lineWidth = 3; 
+                    ctx.strokeRect(this.x - 4, this.y - 4, this.baseWidth + 8, this.baseHeight + 8); 
+                }
                 if (this.isAttacking && this.weaponType !== 'staff') {
-                    ctx.save(); let ax = this.facing === 'right' ? this.x + this.baseWidth : this.x - this.attackBox.width; let ay = this.y + 15;
+                    ctx.save(); 
+                    let ax = this.facing === 'right' ? this.x + this.baseWidth : this.x - this.attackBox.width; 
+                    let ay = this.y + 15;
                     let gradient = ctx.createLinearGradient(ax, ay, ax + this.attackBox.width, ay);
                     gradient.addColorStop(this.facing === 'right' ? 0 : 1, this.attackType === 'skill' ? '#9c88ff' : this.weapon.fxColor);
                     gradient.addColorStop(this.facing === 'right' ? 1 : 0, 'rgba(255,255,255,0)');
-                    ctx.fillStyle = gradient; ctx.fillRect(ax, ay, this.attackBox.width, this.attackBox.height); ctx.restore();
+                    ctx.fillStyle = gradient; 
+                    ctx.shadowBlur = 12; ctx.shadowColor = this.weapon.fxColor;
+                    ctx.fillRect(ax, ay, this.attackBox.width, this.attackBox.height);
+                    ctx.shadowBlur = 0;
+                    ctx.restore();
                 }
             }
             update() {
                 this.scaleX += (1 - this.scaleX) * 0.15; this.scaleY += (1 - this.scaleY) * 0.15;
                 if (Math.abs(this.vx) > 0.5 && this.vy === 0) { this.scaleX = 1.04; this.scaleY = 0.96; }
-                this.x += this.vx; this.y += this.vy;
-                if (this.y + this.baseHeight + this.vy >= canvas.height - 35) { if (this.vy > 2) { this.scaleX = 1.18; this.scaleY = 0.82; } this.vy = 0; this.y = canvas.height - 35 - this.baseHeight; } else { this.vy += GRAVITY; }
-                if (this.x < 0) this.x = 0; if (this.x + this.baseWidth > canvas.width) this.x = canvas.width - this.baseWidth;
-                if (this.poisonTicks > 0 && Math.random() < 0.015) { this.takeDamage(1, null, false); this.poisonTicks--; updateHealthUI(); }
+                let moveSpeed = 5.5;
+                if (Date.now() < this.speedBoostUntil) moveSpeed *= 1.5;
+                this.x += this.vx * moveSpeed / 5.5;
+                this.y += this.vy;
+                if (this.y + this.baseHeight + this.vy >= canvas.height - 35) { 
+                    if (this.vy > 2) { this.scaleX = 1.18; this.scaleY = 0.82; } 
+                    this.vy = 0; this.y = canvas.height - 35 - this.baseHeight; 
+                } else { this.vy += GRAVITY; }
+                if (this.x < 0) this.x = 0; 
+                if (this.x + this.baseWidth > canvas.width) this.x = canvas.width - this.baseWidth;
+                if (this.poisonTicks > 0 && Math.random() < 0.018) { 
+                    this.takeDamage(1, null, false); 
+                    this.poisonTicks--; 
+                    updateHealthUI(); 
+                }
                 this.draw();
             }
             takeDamage(amount, attacker, canReflect = true) {
                 if (Date.now() < this.invincibleUntil) return;
-                if (canReflect && this.weaponType === 'shield' && attacker) { attacker.takeDamage(amount * 0.2, null, false); }
-                this.health -= amount; this.flash = 12; if (this.health <= 0) this.health = 0; // 稍微拉長閃爍幀數增加視覺反饋
+                if (canReflect && this.weaponType === 'shield' && attacker) { 
+                    attacker.takeDamage(Math.ceil(amount * 0.25), null, false); 
+                    createHitExplosion(attacker.x + 20, attacker.y + 30, '#feca57', 0.7);
+                }
+                this.health -= amount; 
+                this.flash = 12; 
+                if (this.health <= 0) this.health = 0;
+                // 受傷粒子
+                for(let i=0; i<6; i++) particles.push(new Particle(this.x + this.baseWidth/2, this.y + this.baseHeight/2, '#ff4757', 0.8));
             }
             attack(type) {
                 if (gameOver || !player1 || !player2) return;
@@ -348,22 +366,52 @@
                     if (now < this.nextSkillTime) return;
                     this.nextSkillTime = now + this.weapon.skillCD;
                     startVisualCD(this.id, this.weapon.skillCD);
-                    if (this.weaponType === 'shield') { this.invincibleUntil = now + 3000; triggerScreenShake(4, 2); return; }
+                    if (this.weaponType === 'shield') { 
+                        this.invincibleUntil = now + 3000; 
+                        triggerScreenShake(6, 3); 
+                        for(let i=0; i<20; i++) particles.push(new Particle(this.x + 20, this.y + 40, '#feca57', 1.2));
+                        return; 
+                    }
                     if (this.weaponType === 'staff') {
-                        triggerScreenShake(15, 8); let enemy = this.id === 1 ? player2 : player1;
-                        let finalDmg = (now < this.dmgBuffUntil ? 22 : 11); enemy.takeDamage(finalDmg, this);
-                        createHitExplosion(enemy.x + 20, enemy.y + 40, '#9c88ff'); updateHealthUI(); 
+                        triggerScreenShake(18, 10); 
+                        let enemy = this.id === 1 ? player2 : player1;
+                        let finalDmg = (now < this.dmgBuffUntil ? 24 : 12); 
+                        enemy.takeDamage(finalDmg, this);
+                        createHitExplosion(enemy.x + 20, enemy.y + 40, '#9c88ff', 1.8);
+                        // 落雷特效
+                        for(let i=0; i<5; i++) {
+                            setTimeout(() => {
+                                if (!gameOver) {
+                                    let lx = enemy.x + Math.random() * enemy.baseWidth;
+                                    let ly = enemy.y + Math.random() * enemy.baseHeight;
+                                    for(let j=0; j<12; j++) particles.push(new Particle(lx, ly, '#f1c40f', 1.5));
+                                }
+                            }, i * 40);
+                        }
+                        updateHealthUI(); 
                         if(enemy.health <= 0) endGame(`${this.name} 贏了！`);
                         return;
                     }
                 }
                 if (!this.isAttacking) {
                     this.isAttacking = true; this.attackType = type; this.scaleX = 1.15; this.scaleY = 0.9;
+                    // 攻擊軌跡粒子
+                    let fx = this.facing === 'right' ? this.x + this.baseWidth : this.x;
+                    let fy = this.y + 30;
+                    for(let i=0; i<4; i++) particles.push(new Particle(fx + (Math.random()-0.5)*20, fy + (Math.random()-0.5)*20, this.weapon.fxColor, 0.6));
+                    
                     if (this.weaponType === 'staff' && type === 'normal') {
                         let bx = this.facing === 'right' ? this.x + this.baseWidth + 5 : this.x - 5;
                         projectiles.push(new Projectile(bx, this.y + 30, this.facing, this.id));
-                    } else { this.vx += this.facing === 'right' ? 4 : -4; }
-                    if (this.weaponType === 'spear' && type === 'skill') { this.vx += this.facing === 'right' ? 12 : -12; this.attackBox.width = this.weapon.range * 1.6; } else { this.attackBox.width = this.weapon.range; }
+                    } else { 
+                        this.vx += this.facing === 'right' ? 4 : -4; 
+                    }
+                    if (this.weaponType === 'spear' && type === 'skill') { 
+                        this.vx += this.facing === 'right' ? 15 : -15; 
+                        this.attackBox.width = this.weapon.range * 1.7; 
+                    } else { 
+                        this.attackBox.width = this.weapon.range; 
+                    }
                     setTimeout(() => { this.isAttacking = false; }, this.weapon.cooldown);
                 }
             }
@@ -379,104 +427,229 @@
         }
 
         function startGame() {
-            // 獲取輸入的名字，若空白則給預設值
             let p1Name = document.getElementById('p1-name-input').value.trim() || '玩家1';
             let p2Name = document.getElementById('p2-name-input').value.trim() || '玩家2';
-
-            // 同步更新頂部血條的名稱顯示
             document.getElementById('p1-hud-name').innerText = p1Name;
             document.getElementById('p2-hud-name').innerText = p2Name;
-
             document.getElementById('weapon-select-screen').classList.add('hidden');
             document.getElementById('touch-controls').classList.remove('menu-active');
-            
-            // 實例化角色時帶入名字
             player1 = new Fighter({ x: 120, color: '#4cd137', id: 1, weaponType: p1SelectedWeapon, name: p1Name });
             player2 = new Fighter({ x: 640, color: '#00a8ff', id: 2, weaponType: p2SelectedWeapon, name: p2Name });
-            
-            gameOver = false; particles = []; projectiles = []; activeRune = null;
+            gameOver = false; particles = []; projectiles = []; activeRune = null; pickups = [];
             document.getElementById('game-over-screen').classList.add('hidden');
             updateHealthUI();
+            if (cdIntervals.p1) clearInterval(cdIntervals.p1);
+            if (cdIntervals.p2) clearInterval(cdIntervals.p2);
+            cdIntervals = { p1: null, p2: null };
+            document.getElementById('p1-skr-cd').classList.remove('active');
+            document.getElementById('p2-skr-cd').classList.remove('active');
             animate();
         }
 
         function startVisualCD(playerId, cdDuration) {
             const overlay = document.getElementById(`p${playerId}-skr-cd`);
-            overlay.classList.add('active'); let timeLeft = cdDuration / 1000; overlay.innerText = timeLeft.toFixed(1) + 's';
-            let cdInterval = setInterval(() => { timeLeft -= 0.1; if (timeLeft <= 0 || gameOver) { clearInterval(cdInterval); overlay.classList.remove('active'); } else { overlay.innerText = timeLeft.toFixed(1) + 's'; } }, 100);
+            if (cdIntervals[`p${playerId}`]) clearInterval(cdIntervals[`p${playerId}`]);
+            overlay.classList.add('active'); 
+            let timeLeft = cdDuration / 1000; 
+            overlay.innerText = timeLeft.toFixed(1) + 's';
+            cdIntervals[`p${playerId}`] = setInterval(() => { 
+                timeLeft -= 0.1; 
+                if (timeLeft <= 0 || gameOver) { 
+                    clearInterval(cdIntervals[`p${playerId}`]); 
+                    cdIntervals[`p${playerId}`] = null;
+                    overlay.classList.remove('active'); 
+                } else { 
+                    overlay.innerText = timeLeft.toFixed(1) + 's'; 
+                } 
+            }, 100);
         }
 
-        function triggerScreenShake(duration, intensity) { screenShakeTime = duration; screenShakeIntensity = intensity; }
-        function createHitExplosion(x, y, color) { for(let i=0; i<10; i++) { particles.push(new Particle(x, y, color)); } }
+        function triggerScreenShake(duration, intensity) { screenShakeTime = Math.max(screenShakeTime, duration); screenShakeIntensity = Math.max(screenShakeIntensity, intensity); }
+        function createHitExplosion(x, y, color, sizeMult = 1) { for(let i=0; i<14; i++) { particles.push(new Particle(x, y, color, sizeMult)); } }
 
-        setInterval(() => { if (!gameOver && !activeRune && player1) activeRune = new Rune(); }, 10000);
+        // 道具生成器，每8秒隨機生成
+        setInterval(() => { 
+            if (!gameOver && player1) {
+                if (Math.random() < 0.7) {
+                    let types = ['health', 'speed', 'shield', 'damage'];
+                    let type = types[Math.floor(Math.random() * types.length)];
+                    pickups.push(new Pickup(type));
+                }
+            }
+        }, 8000);
+
+        setInterval(() => { if (!gameOver && !activeRune && player1) activeRune = new Rune(); }, 15000);
 
         function updateHealthUI() {
             if (!player1 || !player2) return;
             let hp1 = Math.ceil(player1.health); let hp2 = Math.ceil(player2.health);
-            document.getElementById('p1-hp-text').innerText = `${hp1} / 100`; document.getElementById('p2-hp-text').innerText = `${hp2} / 100`;
-            document.getElementById('p1-health').style.width = hp1 + '%'; document.getElementById('p2-health').style.width = hp2 + '%';
-            setTimeout(() => { if(document.getElementById('p1-health-back')) { document.getElementById('p1-health-back').style.width = hp1 + '%'; document.getElementById('p2-health-back').style.width = hp2 + '%'; } }, 150);
+            document.getElementById('p1-hp-text').innerText = `${hp1} / 100`; 
+            document.getElementById('p2-hp-text').innerText = `${hp2} / 100`;
+            document.getElementById('p1-health').style.width = hp1 + '%'; 
+            document.getElementById('p2-health').style.width = hp2 + '%';
+            setTimeout(() => { 
+                if(document.getElementById('p1-health-back')) { 
+                    document.getElementById('p1-health-back').style.width = hp1 + '%'; 
+                    document.getElementById('p2-health-back').style.width = hp2 + '%'; 
+                } 
+            }, 150);
         }
 
         function checkHit(att, def) {
-            let ax = att.facing === 'right' ? att.x + att.baseWidth : att.x - att.attackBox.width; let ay = att.y + 15;
-            return ( ax + att.attackBox.width >= def.x && ax <= def.x + def.baseWidth && ay + att.attackBox.height >= def.y && ay <= def.y + def.baseHeight );
+            let ax = att.facing === 'right' ? att.x + att.baseWidth : att.x - att.attackBox.width; 
+            let ay = att.y + 15;
+            return ( ax + att.attackBox.width >= def.x && ax <= def.x + def.baseWidth && 
+                     ay + att.attackBox.height >= def.y && ay <= def.y + def.baseHeight );
         }
 
         function animate() {
-            if (gameOver) return; window.requestAnimationFrame(animate);
-            ctx.save(); if (screenShakeTime > 0) { ctx.translate((Math.random() - 0.5) * screenShakeIntensity, (Math.random() - 0.5) * screenShakeIntensity); screenShakeTime--; }
-            let bgGrd = ctx.createLinearGradient(0, 0, 0, canvas.height); bgGrd.addColorStop(0, '#0f1115'); bgGrd.addColorStop(1, '#1b1f27');
-            ctx.fillStyle = bgGrd; ctx.fillRect(0, 0, canvas.width, canvas.height);
-            ctx.fillStyle = '#10ac84'; ctx.fillRect(0, canvas.height - 35, canvas.width, 35);
+            if (gameOver) return; 
+            window.requestAnimationFrame(animate);
+            ctx.save(); 
+            if (screenShakeTime > 0) { 
+                ctx.translate((Math.random() - 0.5) * screenShakeIntensity, (Math.random() - 0.5) * screenShakeIntensity); 
+                screenShakeTime--; 
+            }
+            // 動態星空背景
+            ctx.fillStyle = '#0f1115'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+            stars.forEach(s => {
+                s.brightness += (Math.random() - 0.5) * 0.02;
+                s.brightness = Math.max(0.3, Math.min(1, s.brightness));
+                ctx.fillStyle = `rgba(255,255,255,${s.brightness})`;
+                ctx.beginPath();
+                ctx.arc(s.x, s.y, s.radius, 0, Math.PI*2);
+                ctx.fill();
+            });
+            // 地面
+            let groundGrd = ctx.createLinearGradient(0, canvas.height-35, 0, canvas.height);
+            groundGrd.addColorStop(0, '#1b4332'); groundGrd.addColorStop(1, '#081c15');
+            ctx.fillStyle = groundGrd; ctx.fillRect(0, canvas.height - 35, canvas.width, 35);
 
-            player1.vx = p1Joystick.dx * 5.5; if(p1Joystick.dx > 0.05) player1.facing = 'right'; if(p1Joystick.dx < -0.05) player1.facing = 'left';
+            // 處理道具
+            for (let i = pickups.length-1; i >= 0; i--) {
+                let p = pickups[i];
+                p.update();
+                if (p.lifetime <= 0) { pickups.splice(i,1); continue; }
+                p.draw();
+                [player1, player2].forEach(player => {
+                    let dx = (player.x + player.baseWidth/2) - p.x;
+                    let dy = (player.y + player.baseHeight/2) - p.y;
+                    if (Math.sqrt(dx*dx + dy*dy) < p.radius + 20) {
+                        applyPickup(player, p.type);
+                        pickups.splice(i,1);
+                        triggerScreenShake(3, 2);
+                    }
+                });
+            }
+
+            // 角色控制
+            let p1Speed = Date.now() < player1.speedBoostUntil ? 8 : 5.5;
+            player1.vx = p1Joystick.dx * p1Speed; 
+            if(p1Joystick.dx > 0.05) player1.facing = 'right'; 
+            if(p1Joystick.dx < -0.05) player1.facing = 'left';
             if(p1Joystick.dy < -0.7 && player1.vy === 0) { player1.vy = -13.5; player1.scaleY = 1.2; player1.scaleX = 0.8; }
-            player2.vx = p2Joystick.dx * 5.5; if(p2Joystick.dx > 0.05) player2.facing = 'right'; if(p2Joystick.dx < -0.05) player2.facing = 'left';
+            
+            let p2Speed = Date.now() < player2.speedBoostUntil ? 8 : 5.5;
+            player2.vx = p2Joystick.dx * p2Speed; 
+            if(p2Joystick.dx > 0.05) player2.facing = 'right'; 
+            if(p2Joystick.dx < -0.05) player2.facing = 'left';
             if(p2Joystick.dy < -0.7 && player2.vy === 0) { player2.vy = -13.5; player2.scaleY = 1.2; player2.scaleX = 0.8; }
 
             if (activeRune) {
                 activeRune.draw();
                 [player1, player2].forEach(p => {
-                    let dx = (p.x + p.baseWidth/2) - activeRune.x; let dy = (p.y + p.baseHeight/2) - activeRune.y;
-                    if (Math.sqrt(dx*dx + dy*dy) < 35) { if (activeRune.type === 'heal') p.health = Math.min(100, p.health + 30); else p.dmgBuffUntil = Date.now() + 5000; activeRune = null; triggerScreenShake(4, 3); updateHealthUI(); }
+                    let dx = (p.x + p.baseWidth/2) - activeRune.x; 
+                    let dy = (p.y + p.baseHeight/2) - activeRune.y;
+                    if (Math.sqrt(dx*dx + dy*dy) < 35) { 
+                        if (activeRune.type === 'heal') {
+                            p.health = Math.min(100, p.health + 35);
+                            for(let i=0; i<8; i++) particles.push(new Particle(p.x+20, p.y+40, '#4cd137', 1));
+                        }
+                        else {
+                            p.dmgBuffUntil = Date.now() + 5000;
+                            for(let i=0; i<8; i++) particles.push(new Particle(p.x+20, p.y+40, '#fbc531', 1));
+                        }
+                        activeRune = null; 
+                        triggerScreenShake(4, 3); 
+                        updateHealthUI(); 
+                    }
                 });
             }
 
             player1.update(); player2.update();
 
+            // 投射物處理
             projectiles.forEach((proj, idx) => {
-                proj.update(); proj.draw(); let target = proj.ownerId === 1 ? player2 : player1;
-                if (proj.x > target.x && proj.x < target.x + target.baseWidth && proj.y > target.y && proj.y < target.y + target.baseHeight) {
-                    let owner = proj.ownerId === 1 ? player1 : player2; let baseDmg = owner.weapon.damage; let finalDmg = Date.now() < owner.dmgBuffUntil ? baseDmg * 2 : baseDmg;
-                    target.takeDamage(finalDmg, owner); createHitExplosion(proj.x, proj.y, '#9c88ff'); projectiles.splice(idx, 1); updateHealthUI();
+                proj.update(); proj.draw(); 
+                let target = proj.ownerId === 1 ? player2 : player1;
+                if (proj.x > target.x && proj.x < target.x + target.baseWidth && 
+                    proj.y > target.y && proj.y < target.y + target.baseHeight) {
+                    let owner = proj.ownerId === 1 ? player1 : player2; 
+                    let baseDmg = owner.weapon.damage; 
+                    let finalDmg = Date.now() < owner.dmgBuffUntil ? baseDmg * 2 : baseDmg;
+                    target.takeDamage(finalDmg, owner); 
+                    createHitExplosion(proj.x, proj.y, '#9c88ff'); 
+                    projectiles.splice(idx, 1); 
+                    updateHealthUI();
                     if(target.health <= 0) endGame(`${owner.name} 贏了！`);
                 }
                 if(proj.x < 0 || proj.x > canvas.width) projectiles.splice(idx, 1);
             });
 
+            // 近戰碰撞檢測
             if (player1.isAttacking && player1.weaponType !== 'staff' && checkHit(player1, player2)) {
-                let isSkill = player1.attackType === 'skill'; let baseDmg = isSkill ? player1.weapon.damage * 1.8 : player1.weapon.damage; let finalDmg = Date.now() < player1.dmgBuffUntil ? baseDmg * 2 : baseDmg;
-                player2.takeDamage(finalDmg, player1); createHitExplosion(player2.x + 20, player2.y + 35, '#ff4757');
-                if (player1.weaponType === 'sword' && isSkill) player2.vx += player1.facing === 'right' ? 15 : -15;
-                if (player1.weaponType === 'dagger' && isSkill) player2.poisonTicks = 5;
-                updateHealthUI(); player1.isAttacking = false; if(player2.health <= 0) endGame(`${player1.name} 贏了！`);
+                let isSkill = player1.attackType === 'skill'; 
+                let baseDmg = isSkill ? player1.weapon.damage * 1.8 : player1.weapon.damage; 
+                let finalDmg = Date.now() < player1.dmgBuffUntil ? baseDmg * 2 : baseDmg;
+                player2.takeDamage(finalDmg, player1); 
+                createHitExplosion(player2.x + 20, player2.y + 35, '#ff4757');
+                if (player1.weaponType === 'sword' && isSkill) player2.vx += player1.facing === 'right' ? 18 : -18;
+                if (player1.weaponType === 'dagger' && isSkill) player2.poisonTicks = 6;
+                updateHealthUI(); 
+                player1.isAttacking = false; 
+                if(player2.health <= 0) endGame(`${player1.name} 贏了！`);
             }
             if (player2.isAttacking && player2.weaponType !== 'staff' && checkHit(player2, player1)) {
-                let isSkill = player2.attackType === 'skill'; let baseDmg = isSkill ? player2.weapon.damage * 1.8 : player2.weapon.damage; let finalDmg = Date.now() < player2.dmgBuffUntil ? baseDmg * 2 : baseDmg;
-                player1.takeDamage(finalDmg, player2); createHitExplosion(player1.x + 20, player1.y + 35, '#ff4757');
-                if (player2.weaponType === 'sword' && isSkill) player1.vx += player2.facing === 'right' ? 15 : -15;
-                if (player2.weaponType === 'dagger' && isSkill) player1.poisonTicks = 5;
-                updateHealthUI(); player2.isAttacking = false; if(player1.health <= 0) endGame(`${player2.name} 贏了！`);
+                let isSkill = player2.attackType === 'skill'; 
+                let baseDmg = isSkill ? player2.weapon.damage * 1.8 : player2.weapon.damage; 
+                let finalDmg = Date.now() < player2.dmgBuffUntil ? baseDmg * 2 : baseDmg;
+                player1.takeDamage(finalDmg, player2); 
+                createHitExplosion(player1.x + 20, player1.y + 35, '#ff4757');
+                if (player2.weaponType === 'sword' && isSkill) player1.vx += player2.facing === 'right' ? 18 : -18;
+                if (player2.weaponType === 'dagger' && isSkill) player1.poisonTicks = 6;
+                updateHealthUI(); 
+                player2.isAttacking = false; 
+                if(player1.health <= 0) endGame(`${player2.name} 贏了！`);
             }
-            particles.forEach((p, idx) => { p.update(); p.draw(); if(p.alpha <= 0) particles.splice(idx, 1); }); ctx.restore();
+
+            particles.forEach((p, idx) => { p.update(); p.draw(); if(p.alpha <= 0) particles.splice(idx, 1); }); 
+            ctx.restore();
         }
 
-        function endGame(txt) { gameOver = true; document.getElementById('game-over-screen').classList.remove('hidden'); document.getElementById('winner-text').innerText = txt; }
-        function resetToSelect() { document.getElementById('game-over-screen').classList.add('hidden'); document.getElementById('weapon-select-screen').classList.remove('hidden'); document.getElementById('touch-controls').classList.add('menu-active'); }
+        function applyPickup(player, type) {
+            switch(type) {
+                case 'health': player.health = Math.min(100, player.health + 25); updateHealthUI(); break;
+                case 'speed': player.speedBoostUntil = Date.now() + 5000; break;
+                case 'shield': player.invincibleUntil = Date.now() + 2500; break;
+                case 'damage': player.dmgBuffUntil = Date.now() + 5000; break;
+            }
+        }
 
-        /* 📱 觸控搖桿核心類別 */
+        function endGame(txt) { 
+            gameOver = true; 
+            document.getElementById('game-over-screen').classList.remove('hidden'); 
+            document.getElementById('winner-text').innerText = txt; 
+            if (cdIntervals.p1) clearInterval(cdIntervals.p1);
+            if (cdIntervals.p2) clearInterval(cdIntervals.p2);
+        }
+        function resetToSelect() { 
+            document.getElementById('game-over-screen').classList.add('hidden'); 
+            document.getElementById('weapon-select-screen').classList.remove('hidden'); 
+            document.getElementById('touch-controls').classList.add('menu-active'); 
+            gameOver = false;
+        }
+
+        /* 觸控搖桿 */
         class TouchJoystick {
             constructor(zoneId, knobId) {
                 this.zone = document.getElementById(zoneId); this.knob = document.getElementById(knobId);
@@ -502,7 +675,7 @@
         function bindActionButton(id, callback) { 
             document.getElementById(id).addEventListener('touchstart', (e) => { 
                 e.preventDefault(); 
-                callback(); 
+                if (!gameOver) callback(); 
             }, { passive: false }); 
         }
         bindActionButton('p1-btn-atk', () => { if(player1) player1.attack('normal'); }); 
