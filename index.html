@@ -2,110 +2,120 @@
 <html lang="zh-Hant">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Mini Brawl Ultra - Attack CD Fixed</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover, shrink-to-fit=no">
+    <title>Mini Brawl Ultra - 橫屏全面更新</title>
     <style>
         body {
             margin: 0; padding: 0; background-color: #0b0c10;
             color: #f5f6fa; font-family: system-ui, -apple-system, sans-serif;
             overflow: hidden; touch-action: none; user-select: none; -webkit-user-select: none;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
-            height: 100vh; box-sizing: border-box;
+            height: 100vh; width: 100vw; box-sizing: border-box;
         }
         #game-wrapper {
-            width: 100%; max-width: 840px;
-            display: flex; flex-direction: column; align-items: center;
-            padding: 10px; box-sizing: border-box;
+            width: 100%; max-width: 840px; height: 100%;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            padding: 5px; box-sizing: border-box; flex-shrink: 1;
         }
         #game-container { 
-            position: relative; width: 100%;
-            border: 4px solid #1f242d; background-color: #1f272e; 
-            box-shadow: 0 12px 40px rgba(0,0,0,0.8); border-radius: 16px;
-            overflow: hidden; aspect-ratio: 800 / 380;
+            position: relative; width: 100%; max-height: calc(100% - 140px); /* 預留底部操控區 */
+            border: 3px solid #1f242d; background-color: #1f272e; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.8); border-radius: 12px;
+            overflow: hidden; aspect-ratio: 800 / 380; flex-shrink: 1;
         }
         canvas { display: block; width: 100%; height: 100%; }
         #ui {
             position: absolute; top: 0; left: 0; width: 100%;
-            display: flex; justify-content: space-between; padding: 10px 15px; box-sizing: border-box;
+            display: flex; justify-content: space-between; padding: 8px 12px; box-sizing: border-box;
             background: linear-gradient(to bottom, rgba(0,0,0,0.85), rgba(0,0,0,0)); pointer-events: none; z-index: 5;
         }
         .player-hud { width: 40%; }
-        .hud-meta { display: flex; justify-content: space-between; font-size: 13px; font-weight: bold; text-shadow: 0 2px 4px #000; }
-        .bar-container { width: 100%; height: 16px; background: #222; border: 1.5px solid #fff; border-radius: 4px; overflow: hidden; margin-top: 3px; position: relative; }
+        .hud-meta { display: flex; justify-content: space-between; font-size: 12px; font-weight: bold; text-shadow: 0 2px 4px #000; }
+        .bar-container { width: 100%; height: 14px; background: #222; border: 1.5px solid #fff; border-radius: 4px; overflow: hidden; margin-top: 2px; position: relative; }
         .bar-back { position: absolute; top:0; left:0; height:100%; background: #e84118; width: 100%; transition: width 0.3s ease-out; }
         .bar-front { position: absolute; top:0; left:0; height:100%; width: 100%; }
         #p1-health { background: linear-gradient(90deg, #4cd137, #44bd32); }
         #p2-health { background: linear-gradient(90deg, #00a8ff, #0097e6); float: right; }
-        .state-tag { color: #fbc531; font-size: 11px; margin-left: 5px; font-weight: normal; }
 
         #weapon-select-screen {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(11, 12, 16, 0.98); z-index: 30;
             display: flex; flex-direction: column; justify-content: space-between; align-items: center;
-            padding: 12px; box-sizing: border-box;
+            padding: 8px; box-sizing: border-box;
         }
         .select-main-area {
-            display: flex; justify-content: space-between; align-items: stretch; width: 100%; flex-grow: 1; gap: 15px;
+            display: flex; justify-content: space-between; align-items: stretch; width: 100%; flex-grow: 1; gap: 10px;
         }
         .player-box { 
-            background: #15181f; padding: 8px 12px; border-radius: 10px; border: 2px solid #2f3640; 
+            background: #15181f; padding: 6px 10px; border-radius: 8px; border: 2px solid #2f3640; 
             width: 42%; display: flex; flex-direction: column; justify-content: flex-start; box-sizing: border-box; 
         }
-        .player-box h3 { margin: 0 0 6px 0; font-size: 16px; text-align: center; font-weight: 900; }
+        .player-box h3 { margin: 0 0 4px 0; font-size: 15px; text-align: center; font-weight: 900; }
         .name-input {
-            width: 100%; padding: 6px; margin-bottom: 8px; border-radius: 6px;
+            width: 100%; padding: 5px; margin-bottom: 6px; border-radius: 5px;
             border: 2px solid #4f5b66; background: #21252f; color: white;
-            font-size: 13px; text-align: center; box-sizing: border-box;
+            font-size: 12px; text-align: center; box-sizing: border-box;
         }
         .name-input:focus { border-color: #fbc531; outline: none; }
         .weapon-btn { 
-            width: 100%; padding: 5px 8px; margin: 2px 0; cursor: pointer; 
-            background: #21252f; color: white; border: 2px solid transparent; border-radius: 6px; 
+            width: 100%; padding: 4px 6px; margin: 1px 0; cursor: pointer; 
+            background: #21252f; color: white; border: 2px solid transparent; border-radius: 5px; 
             text-align: left; display: flex; flex-direction: column; box-sizing: border-box;
         }
-        .weapon-btn .w-name { font-weight: bold; font-size: 12px; color: #f5f6fa; }
-        .weapon-btn .w-desc { font-size: 9px; color: #9c88ff; margin-top: 1px; }
-        .weapon-btn.selected { background: #e84118; border-color: #fff; box-shadow: 0 0 8px rgba(232,65,24,0.5); }
+        .weapon-btn .w-name { font-weight: bold; font-size: 11px; color: #f5f6fa; }
+        .weapon-btn .w-desc { font-size: 8px; color: #9c88ff; margin-top: 1px; }
+        .weapon-btn.selected { background: #e84118; border-color: #fff; box-shadow: 0 0 6px rgba(232,65,24,0.5); }
         .center-action-box {
             width: 14%; display: flex; flex-direction: column; justify-content: center; align-items: center;
         }
         #start-game-btn { 
-            width: 85px; height: 85px; border-radius: 50%; font-size: 16px; font-weight: 900; 
+            width: 70px; height: 70px; border-radius: 50%; font-size: 14px; font-weight: 900; 
             background: linear-gradient(135deg, #4cd137, #44bd32); color: white; 
-            border: 3px solid #fff; cursor: pointer; box-shadow: 0 0 20px rgba(76,209,55,0.6);
+            border: 3px solid #fff; cursor: pointer; box-shadow: 0 0 16px rgba(76,209,55,0.6);
             display: flex; align-items: center; justify-content: center; text-align: center;
             animation: pulse 1.5s infinite; z-index: 35;
         }
         @keyframes pulse {
-            0% { transform: scale(1); box-shadow: 0 0 12px rgba(76,209,55,0.6); }
-            50% { transform: scale(1.06); box-shadow: 0 0 22px rgba(76,209,55,0.9); }
-            100% { transform: scale(1); box-shadow: 0 0 12px rgba(76,209,55,0.6); }
+            0% { transform: scale(1); box-shadow: 0 0 10px rgba(76,209,55,0.6); }
+            50% { transform: scale(1.08); box-shadow: 0 0 20px rgba(76,209,55,0.9); }
+            100% { transform: scale(1); box-shadow: 0 0 10px rgba(76,209,55,0.6); }
         }
         #touch-controls { 
-            width: 100%; height: 130px; margin-top: 10px;
+            width: 100%; height: 130px; margin-top: 5px;
             display: flex; justify-content: space-between; align-items: center;
-            box-sizing: border-box; padding: 0 5px;
+            box-sizing: border-box; padding: 0 5px; flex-shrink: 0;
         }
         #touch-controls.menu-active { pointer-events: none; opacity: 0.3; }
-        .joystick-container { width: 100px; height: 100px; }
+        .joystick-container { width: 90px; height: 90px; }
         .joystick-zone { width: 100%; height: 100%; background: rgba(255,255,255,0.05); border-radius: 50%; border: 2px solid rgba(255,255,255,0.15); position: relative; pointer-events: auto; }
-        .joystick-knob { position: absolute; width: 40px; height: 40px; background: rgba(255,255,255,0.35); border-radius: 50%; top: 28px; left: 28px; border: 1px solid #fff; }
-        .action-zone { display: flex; gap: 10px; align-items: center; pointer-events: auto; }
-        .btn-wrapper { position: relative; width: 54px; height: 54px; }
-        .btn { width: 100%; height: 100%; border-radius: 50%; border: 2px solid rgba(255,255,255,0.7); font-size: 13px; font-weight: 900; color: white; box-shadow: 0 4px 6px rgba(0,0,0,0.3); position: relative; overflow: hidden; }
+        .joystick-knob { position: absolute; width: 36px; height: 36px; background: rgba(255,255,255,0.35); border-radius: 50%; top: 25px; left: 25px; border: 1px solid #fff; }
+        .action-zone { display: flex; gap: 8px; align-items: center; pointer-events: auto; }
+        .btn-wrapper { position: relative; width: 50px; height: 50px; }
+        .btn { width: 100%; height: 100%; border-radius: 50%; border: 2px solid rgba(255,255,255,0.7); font-size: 12px; font-weight: 900; color: white; box-shadow: 0 3px 6px rgba(0,0,0,0.3); position: relative; overflow: hidden; }
         .btn-red { background: linear-gradient(135deg, #ff4757, #ff6b81); }
         .btn-yellow { background: linear-gradient(135deg, #ffa502, #eccc68); color: #1e272e; }
-        .cd-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.8); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 12px; font-weight: bold; pointer-events: none; opacity: 0; }
+        .cd-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.8); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 11px; font-weight: bold; pointer-events: none; opacity: 0; }
         .cd-overlay.active { opacity: 1; }
         #game-over-screen { position: absolute; top:0; left:0; width:100%; height:100%; background:rgba(11,12,16,0.95); z-index:15; display:flex; flex-direction:column; justify-content:center; align-items:center; }
         .hidden { display: none !important; }
+
+        /* 📱 橫屏適配 */
+        @media (orientation: landscape) {
+            #game-container { max-height: calc(100% - 110px); }
+            #touch-controls { height: 100px; }
+            .joystick-container { width: 80px; height: 80px; }
+            .joystick-knob { width: 32px; height: 32px; top: 22px; left: 22px; }
+            .btn-wrapper { width: 45px; height: 45px; }
+            .btn { font-size: 11px; }
+        }
     </style>
 </head>
 <body>
     <div id="game-wrapper">
         <div id="game-container">
+            <!-- 武器選擇畫面（保留所有武器名稱與描述） -->
             <div id="weapon-select-screen">
-                <h2 style="font-size: 18px; color: #fbc531; margin: 0 0 6px 0; font-weight:900; text-align:center; width:100%;">⚔️ MINI BRAWL ULTRA v6.1 ⚔️</h2>
+                <h2 style="font-size: 16px; color: #fbc531; margin: 0 0 4px 0; font-weight:900; text-align:center; width:100%;">⚔️ MINI BRAWL ULTRA v6.2 ⚔️</h2>
                 <div class="select-main-area">
                     <div class="player-box" id="p1-select">
                         <h3 style="color: #4cd137;">PLAYER 1</h3>
@@ -131,6 +141,7 @@
                 </div>
             </div>
 
+            <!-- HUD -->
             <div id="ui">
                 <div class="player-hud">
                     <div class="hud-meta"><span style="color:#4cd137;" id="p1-hud-name">P1</span><span id="p1-hp-text">100 / 100</span></div>
@@ -151,11 +162,12 @@
             <canvas id="gameCanvas" width="800" height="380"></canvas>
 
             <div id="game-over-screen" class="hidden">
-                <h1 id="winner-text" style="font-size:30px; color:#fbc531; font-weight:900;"></h1>
-                <button style="padding: 10px 30px; font-size:18px; font-weight:900; background:#4cd137; border:none; border-radius:6px; color:white; cursor:pointer;" onclick="resetToSelect()">🔄 重新選角</button>
+                <h1 id="winner-text" style="font-size:28px; color:#fbc531; font-weight:900;"></h1>
+                <button style="padding: 8px 25px; font-size:16px; font-weight:900; background:#4cd137; border:none; border-radius:6px; color:white; cursor:pointer;" onclick="resetToSelect()">🔄 重新選角</button>
             </div>
         </div>
 
+        <!-- 底部觸控區域 -->
         <div id="touch-controls" class="menu-active">
             <div class="joystick-container"><div class="joystick-zone" id="p1-joystick-zone"><div class="joystick-knob" id="p1-knob"></div></div></div>
             <div class="action-zone">
@@ -175,6 +187,7 @@
         const ctx = canvas.getContext('2d');
         const GRAVITY = 0.55;
 
+        // 武器資料（保留所有原始名稱與描述）
         const WEAPON_TYPES = {
             sword:  { range: 85,  height: 40, damage: 9,  cooldown: 750, skillCD: 3500,  fxColor: 'rgba(255, 255, 255, 0.7)' },
             spear:  { range: 105, height: 22, damage: 7,  cooldown: 280, skillCD: 4500,  fxColor: 'rgba(230, 126, 34, 0.7)' },
@@ -191,6 +204,7 @@
         let pickups = [];
         let cdIntervals = { p1: null, p2: null };
 
+        // 星空背景
         let stars = [];
         for (let i = 0; i < 60; i++) {
             stars.push({ x: Math.random() * canvas.width, y: Math.random() * canvas.height, radius: Math.random() * 1.5 + 0.5, brightness: Math.random() * 0.5 + 0.5 });
@@ -272,7 +286,7 @@
                 this.baseWidth = 42; this.baseHeight = 85; this.color = color; this.health = 100;
                 this.facing = id === 1 ? 'right' : 'left'; this.isAttacking = false; this.attackType = 'normal';
                 this.flash = 0; this.scaleX = 1; this.scaleY = 1; 
-                this.nextAttackTime = 0; // 新增：普攻冷卻安全鎖時間戳記
+                this.nextAttackTime = 0;   // ★ 普攻冷卻安全鎖（保留）
                 this.nextSkillTime = 0;
                 this.poisonTicks = 0; this.invincibleUntil = 0; this.dmgBuffUntil = 0;
                 this.speedBoostUntil = 0;
@@ -391,12 +405,10 @@
                     }
                 }
                 
-                // 普通攻擊邏輯優化
+                // 普攻冷卻（保留原系統）
                 if (type === 'normal') {
-                    // 檢查普攻冷卻是否到了，如果沒到直接阻擋，冷卻絕對不會歸零
-                    if (now < this.nextAttackTime) return; 
-                    // 設定下一次可以普攻的時間（當前時間 + 武器冷卻時間）
-                    this.nextAttackTime = now + this.weapon.cooldown; 
+                    if (now < this.nextAttackTime) return;
+                    this.nextAttackTime = now + this.weapon.cooldown;
                 }
 
                 if (!this.isAttacking) {
@@ -417,9 +429,7 @@
                     } else { 
                         this.attackBox.width = this.weapon.range; 
                     }
-                    
-                    // 揮動判定時間（動畫特效可見時間，非冷卻時間）
-                    setTimeout(() => { this.isAttacking = false; }, 150); 
+                    setTimeout(() => { this.isAttacking = false; }, 150);
                 }
             }
         }
@@ -597,6 +607,7 @@
                 if(proj.x < 0 || proj.x > canvas.width) projectiles.splice(idx, 1);
             });
 
+            // 攻擊碰撞處理（普攻與技能分開判斷，保留原冷卻邏輯）
             if (player1.isAttacking && player1.attackType === 'normal' && checkHit(player1, player2)) {
                 let baseDmg = player1.weapon.damage; 
                 let finalDmg = Date.now() < player1.dmgBuffUntil ? baseDmg * 2 : baseDmg;
